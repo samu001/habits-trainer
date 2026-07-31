@@ -37,9 +37,24 @@ On a Mac with Xcode installed, this can open the iOS Simulator. On other machine
 - `index.ts` – app entry point
 - `assets/` – app icons and splash images
 
+## Implementation roadmap
+
+See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) for the phased plan:
+
+0. Foundation  
+1. Habit goal creation  
+2. Weekly prescription + logging  
+3. Progression engine  
+4. Coaching experience  
+5. Multi-habit load management  
+6. Reminders + polish  
+7. Templates + insights  
+
+**MVP worth sharing = Phases 1–3.**
+
 ## Next steps
 
-- Replace the sample habits UI with your own screens
-- Add navigation with React Navigation
-- Persist habits with AsyncStorage or a backend
-- Create a production iOS build with [EAS Build](https://docs.expo.dev/build/introduction/)
+- Start Phase 1: Create Habit flow (target + small start)
+- Add local persistence
+- Build the weekly prescription + progression engine
+- Create a production iOS build later with [EAS Build](https://docs.expo.dev/build/introduction/)
