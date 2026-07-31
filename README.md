@@ -1,13 +1,28 @@
 # Habits Trainer
 
-Sample React Native (Expo) app for building iPhone apps.
+Progressive habit coaching app for iPhone, built with Expo + React Native.
 
-This starter includes a simple habits checklist UI you can run on an iPhone with the Expo Go app, or build as a native iOS app.
+Set a big habit goal, choose a small starting point, and build up little by little.
+
+Example: want to work out **5× / week for 60 minutes**? Start at **2× / week for 15 minutes**.
+
+## What’s implemented
+
+### Phase 0 — Foundation
+- Expo TypeScript app shell
+- Design tokens and shared UI components
+- React Navigation stack
+
+### Phase 1 — Habit goal creation
+- Create habit flow (name, target, start, pace)
+- Local persistence with AsyncStorage
+- Home list + habit detail screens
+- Validation: start must be smaller than target
 
 ## Requirements
 
 - Node.js 20+
-- Expo Go on your iPhone (for quick testing), or a Mac with Xcode for native iOS builds
+- Expo Go on your iPhone, or a Mac with Xcode for the iOS Simulator
 
 ## Getting started
 
@@ -16,45 +31,37 @@ npm install
 npm start
 ```
 
-Then:
-
-1. Open the Expo Go app on your iPhone
-2. Scan the QR code from the terminal
-3. Edit `App.tsx` and see live updates
-
-### Run specifically for iOS
+Then scan the QR code in **Expo Go**, or run:
 
 ```bash
 npm run ios
 ```
 
-On a Mac with Xcode installed, this can open the iOS Simulator. On other machines, use Expo Go on a physical iPhone.
+## Useful scripts
+
+```bash
+npm start       # start Expo
+npm run ios     # iOS
+npm run typecheck
+npm test
+```
 
 ## Project structure
 
-- `App.tsx` – main sample screen (habits list + progress)
-- `app.json` – Expo / iOS app configuration
-- `index.ts` – app entry point
-- `assets/` – app icons and splash images
+```text
+App.tsx
+src/
+  components/       # shared UI
+  context/          # habits state + persistence
+  lib/              # validation + storage helpers
+  navigation/       # stack navigator
+  screens/          # Home, CreateHabit, HabitDetail
+  theme/            # design tokens
+  types/            # HabitGoal types
+```
 
 ## Implementation roadmap
 
-See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) for the phased plan:
+See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md).
 
-0. Foundation  
-1. Habit goal creation  
-2. Weekly prescription + logging  
-3. Progression engine  
-4. Coaching experience  
-5. Multi-habit load management  
-6. Reminders + polish  
-7. Templates + insights  
-
-**MVP worth sharing = Phases 1–3.**
-
-## Next steps
-
-- Start Phase 1: Create Habit flow (target + small start)
-- Add local persistence
-- Build the weekly prescription + progression engine
-- Create a production iOS build later with [EAS Build](https://docs.expo.dev/build/introduction/)
+**Next up: Phase 2 — weekly prescription + logging.**

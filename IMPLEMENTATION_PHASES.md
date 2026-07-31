@@ -7,27 +7,28 @@ Each phase should be usable on its own before the next one begins.
 
 ---
 
-## Phase 0 — Foundation (current baseline)
+## Phase 0 — Foundation ✅
 
 **Goal:** Ship a clean Expo iPhone app shell.
 
 ### Scope
 - Expo + TypeScript project setup
 - App naming / iOS config (`app.json`)
-- Basic navigation placeholder (single screen is fine)
-- Design tokens (colors, spacing, typography)
+- React Navigation stack shell
+- Design tokens (`src/theme/tokens.ts`)
+- Shared UI primitives (`Screen`, `Button`, `Card`)
 - README with run instructions
 
 ### Done when
 - App runs in Expo Go on iPhone
 - Basic UI shell is ready for habit flows
 
-### Estimated effort
-1–2 days
+### Status
+Completed
 
 ---
 
-## Phase 1 — Habit Goal Creation (MVP core)
+## Phase 1 — Habit Goal Creation ✅
 
 **Goal:** Let users define a target habit and a small starting point.
 
@@ -37,7 +38,7 @@ Each phase should be usable on its own before the next one begins.
   - Target goal (frequency + duration/amount)
   - Starting level (user-adjustable, smaller than target)
   - Progression pace: Gentle / Steady / Ambitious
-- Persist habits locally (AsyncStorage or similar)
+- Persist habits locally (AsyncStorage)
 - Habits list home screen
 - Habit detail screen showing:
   - Target
@@ -65,8 +66,8 @@ type HabitGoal = {
 - Habit persists after app reload
 - Current level displays correctly
 
-### Estimated effort
-3–5 days
+### Status
+Completed — see `src/screens/*`, `src/context/HabitsContext.tsx`, `src/lib/*`
 
 ---
 
@@ -270,16 +271,16 @@ Target `5×60`, start `2×15`:
 
 ## Suggested build order (summary)
 
-| Phase | Focus | Outcome |
-|------:|-------|---------|
-| 0 | Foundation | Runnable iPhone app shell |
-| 1 | Goal creation | Target + start point saved |
-| 2 | Prescription + logging | Weekly plan users can execute |
-| 3 | Progression engine | Auto level-up / hold / downshift |
-| 4 | Coaching UX | Feels supportive and guided |
-| 5 | Multi-habit management | Prevents overload |
-| 6 | Reminders + polish | Daily reliability |
-| 7 | Templates + insights | Faster setup, long-term retention |
+| Phase | Focus | Outcome | Status |
+|------:|-------|---------|--------|
+| 0 | Foundation | Runnable iPhone app shell | ✅ Done |
+| 1 | Goal creation | Target + start point saved | ✅ Done |
+| 2 | Prescription + logging | Weekly plan users can execute | Next |
+| 3 | Progression engine | Auto level-up / hold / downshift | Planned |
+| 4 | Coaching UX | Feels supportive and guided | Planned |
+| 5 | Multi-habit management | Prevents overload | Planned |
+| 6 | Reminders + polish | Daily reliability | Planned |
+| 7 | Templates + insights | Faster setup, long-term retention | Planned |
 
 ---
 
@@ -325,7 +326,7 @@ src/
 
 ## Next implementation step
 
-Begin **Phase 1**:
-1. Replace the sample checklist UI with a Create Habit flow
-2. Add local storage
-3. Show habit list + detail with target / start / current
+Begin **Phase 2**:
+1. Generate a weekly prescription from `current` level
+2. Add session logging (complete / partial / skip)
+3. Show this-week progress on Home and Habit Detail
