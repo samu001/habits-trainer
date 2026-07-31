@@ -19,6 +19,12 @@ Example: want to work out **5× / week for 60 minutes**? Start at **2× / week f
 - Home list + habit detail screens
 - Validation: start must be smaller than target
 
+### Phase 2 — Weekly prescription + logging
+- This-week plan generated from current level
+- Log sessions as completed, partial, or skipped
+- Credit-based weekly completion rate
+- Session history per habit
+
 ## Requirements
 
 - Node.js 20+
@@ -51,17 +57,17 @@ npm test
 ```text
 App.tsx
 src/
-  components/       # shared UI
-  context/          # habits state + persistence
-  lib/              # validation + storage helpers
+  components/       # shared UI + WeeklyPlanCard
+  context/          # habits + session logs state
+  lib/              # validation, dates, prescription, storage
   navigation/       # stack navigator
-  screens/          # Home, CreateHabit, HabitDetail
+  screens/          # Home, CreateHabit, HabitDetail, LogSession
   theme/            # design tokens
-  types/            # HabitGoal types
+  types/            # HabitGoal + SessionLog types
 ```
 
 ## Implementation roadmap
 
 See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md).
 
-**Next up: Phase 2 — weekly prescription + logging.**
+**Next up: Phase 3 — progression engine (level-up / hold / downshift).**

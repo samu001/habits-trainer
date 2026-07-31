@@ -16,16 +16,21 @@ import { useHabits } from '../context/HabitsContext';
 import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
 import type { RootStackParamList } from '../navigation/types';
 import type { HabitGoal } from '../types/habit';
+import type { WeeklyProgress } from '../types/logging';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 
 type HomeNavigation = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 function HabitListItem({
   habit,
+  weekly,
   onPress,
+  onLogPress,
 }: {
   habit: HabitGoal;
+  weekly: WeeklyProgress | null;
   onPress: () => void;
+  onLogPress: () => void;
 }) {
   const progress = progressTowardTarget(habit);
 
@@ -40,14 +45,53 @@ function HabitListItem({
           <Text style={styles.habitTitle}>{habit.title}</Text>
           <Text style={styles.paceBadge}>{formatPace(habit.pace)}</Text>
         </View>
-        <Text style={styles.habitMeta}>Current: {formatLevel(habit.current)}</Text>
-        <Text style={styles.habitMeta}>Target: {formatLevel(habit.target)}</Text>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-        </View>
+
+        {weekly ? (
+          <>
+            <Text style={styles.prescription}>{weekly.prescriptionLabel}</Text>
+            <View style={styles.weekStats}>
+              <Text style={styles.habitMeta}>
+                This week: {weekly.earnedCredits.toFixed(
+                  weekly.earnedCredits % 1 === 0 ? 0 : 1,
+                )}
+                /{weekly.requiredSessions} credits
+              </Text>
+              <Text style={styles.habitMeta}>
+                {weekly.remainingSessions} left
+              </Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${weekly.completionRate * 100}%` },
+                ]}
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.habitMeta}>
+              Current: {formatLevel(habit.current)}
+            </Text>
+            <View style={styles.progressTrack}>
+              <View
+                style={[styles.progressFill, { width: `${progress * 100}%` }]}
+              />
+            </View>
+          </>
+        )}
+
         <Text style={styles.progressLabel}>
-          {Math.round(progress * 100)}% of the way to your goal
+          Goal path: {Math.round(progress * 100)}% from start to target
         </Text>
+
+        <Button
+          label="Log session"
+          variant="secondary"
+          onPress={onLogPress}
+          style={styles.logButton}
+        />
       </Card>
     </Pressable>
   );
@@ -55,16 +99,16 @@ function HabitListItem({
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigation>();
-  const { habits, isLoading, error, refresh } = useHabits();
+  const { habits, isLoading, error, refresh, getWeeklyProgress } = useHabits();
 
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>Habits Trainer</Text>
-        <Text style={styles.title}>Start small. Build up.</Text>
+        <Text style={styles.title}>This week’s plan</Text>
         <Text style={styles.subtitle}>
-          Set a big habit goal, begin at a level you can actually keep, and grow
-          it little by little.
+          Start small, log honestly, and build toward your real goal one
+          manageable week at a time.
         </Text>
       </View>
 
@@ -89,7 +133,7 @@ export function HomeScreen() {
           <Text style={styles.emptyTitle}>No habit goals yet</Text>
           <Text style={styles.emptyBody}>
             Example: want to work out 5× / week for 60 minutes? Start with 2× /
-            week for 15 minutes and ramp from there.
+            week for 15 minutes, then log each session as you go.
           </Text>
         </Card>
       ) : (
@@ -102,8 +146,12 @@ export function HomeScreen() {
           renderItem={({ item }) => (
             <HabitListItem
               habit={item}
+              weekly={getWeeklyProgress(item.id)}
               onPress={() =>
                 navigation.navigate('HabitDetail', { habitId: item.id })
+              }
+              onLogPress={() =>
+                navigation.navigate('LogSession', { habitId: item.id })
               }
             />
           )}
@@ -174,6 +222,17 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     fontWeight: '700',
   },
+  prescription: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    lineHeight: 21,
+  },
+  weekStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
   habitMeta: {
     ...typography.body,
     color: colors.textSecondary,
@@ -193,6 +252,9 @@ const styles = StyleSheet.create({
   progressLabel: {
     ...typography.caption,
     color: colors.textMuted,
+  },
+  logButton: {
+    marginTop: spacing.xs,
   },
   centered: {
     flex: 1,

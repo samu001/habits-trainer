@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CreateHabitScreen } from '../screens/CreateHabitScreen';
 import { HabitDetailScreen } from '../screens/HabitDetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { LogSessionScreen } from '../screens/LogSessionScreen';
 import { colors } from '../theme/tokens';
 import type { RootStackParamList } from './types';
 
@@ -43,6 +44,11 @@ export function RootNavigator() {
           name="HabitDetail"
           component={HabitDetailScreen}
           options={{ title: 'Habit details' }}
+        />
+        <Stack.Screen
+          name="LogSession"
+          component={LogSessionScreen}
+          options={{ title: 'Log session' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

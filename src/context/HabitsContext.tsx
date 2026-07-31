@@ -9,16 +9,35 @@ import {
 } from 'react';
 
 import { createHabitGoal, validateCreateHabitInput } from '../lib/habits';
-import { loadHabits, saveHabits } from '../lib/storage';
+import {
+  buildWeeklyProgress,
+  createSessionLog,
+} from '../lib/prescription';
+import {
+  loadHabits,
+  loadLogs,
+  saveHabits,
+  saveLogs,
+} from '../lib/storage';
 import type { CreateHabitInput, HabitGoal } from '../types/habit';
+import type {
+  LogSessionInput,
+  SessionLog,
+  WeeklyProgress,
+} from '../types/logging';
 
 type HabitsContextValue = {
   habits: HabitGoal[];
+  logs: SessionLog[];
   isLoading: boolean;
   error: string | null;
   addHabit: (input: CreateHabitInput) => Promise<HabitGoal>;
   deleteHabit: (id: string) => Promise<void>;
   getHabit: (id: string) => HabitGoal | undefined;
+  getLogsForHabit: (habitId: string) => SessionLog[];
+  getWeeklyProgress: (habitId: string, now?: Date) => WeeklyProgress | null;
+  logSession: (input: LogSessionInput) => Promise<SessionLog>;
+  deleteLog: (logId: string) => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -26,14 +45,19 @@ const HabitsContext = createContext<HabitsContextValue | null>(null);
 
 export function HabitsProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<HabitGoal[]>([]);
+  const [logs, setLogs] = useState<SessionLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const stored = await loadHabits();
-      setHabits(stored);
+      const [storedHabits, storedLogs] = await Promise.all([
+        loadHabits(),
+        loadLogs(),
+      ]);
+      setHabits(storedHabits);
+      setLogs(storedLogs);
     } catch {
       setError('Could not load your habits.');
     } finally {
@@ -45,9 +69,14 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  const persist = useCallback(async (next: HabitGoal[]) => {
+  const persistHabits = useCallback(async (next: HabitGoal[]) => {
     setHabits(next);
     await saveHabits(next);
+  }, []);
+
+  const persistLogs = useCallback(async (next: SessionLog[]) => {
+    setLogs(next);
+    await saveLogs(next);
   }, []);
 
   const addHabit = useCallback(
@@ -59,18 +88,19 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
 
       const habit = createHabitGoal(input);
       const next = [habit, ...habits];
-      await persist(next);
+      await persistHabits(next);
       return habit;
     },
-    [habits, persist],
+    [habits, persistHabits],
   );
 
   const deleteHabit = useCallback(
     async (id: string) => {
-      const next = habits.filter((habit) => habit.id !== id);
-      await persist(next);
+      const nextHabits = habits.filter((habit) => habit.id !== id);
+      const nextLogs = logs.filter((log) => log.habitId !== id);
+      await Promise.all([persistHabits(nextHabits), persistLogs(nextLogs)]);
     },
-    [habits, persist],
+    [habits, logs, persistHabits, persistLogs],
   );
 
   const getHabit = useCallback(
@@ -78,17 +108,80 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     [habits],
   );
 
+  const getLogsForHabit = useCallback(
+    (habitId: string) =>
+      logs
+        .filter((log) => log.habitId === habitId)
+        .sort(
+          (a, b) =>
+            new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
+        ),
+    [logs],
+  );
+
+  const getWeeklyProgress = useCallback(
+    (habitId: string, now: Date = new Date()) => {
+      const habit = habits.find((item) => item.id === habitId);
+      if (!habit) {
+        return null;
+      }
+      return buildWeeklyProgress(habit, logs, now);
+    },
+    [habits, logs],
+  );
+
+  const logSession = useCallback(
+    async (input: LogSessionInput) => {
+      const habit = habits.find((item) => item.id === input.habitId);
+      if (!habit) {
+        throw new Error('Habit not found.');
+      }
+
+      const log = createSessionLog(input, habit.current.durationMinutes);
+      const next = [log, ...logs];
+      await persistLogs(next);
+      return log;
+    },
+    [habits, logs, persistLogs],
+  );
+
+  const deleteLog = useCallback(
+    async (logId: string) => {
+      const next = logs.filter((log) => log.id !== logId);
+      await persistLogs(next);
+    },
+    [logs, persistLogs],
+  );
+
   const value = useMemo(
     () => ({
       habits,
+      logs,
       isLoading,
       error,
       addHabit,
       deleteHabit,
       getHabit,
+      getLogsForHabit,
+      getWeeklyProgress,
+      logSession,
+      deleteLog,
       refresh,
     }),
-    [habits, isLoading, error, addHabit, deleteHabit, getHabit, refresh],
+    [
+      habits,
+      logs,
+      isLoading,
+      error,
+      addHabit,
+      deleteHabit,
+      getHabit,
+      getLogsForHabit,
+      getWeeklyProgress,
+      logSession,
+      deleteLog,
+      refresh,
+    ],
   );
 
   return (

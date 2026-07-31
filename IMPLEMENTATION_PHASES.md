@@ -71,7 +71,7 @@ Completed — see `src/screens/*`, `src/context/HabitsContext.tsx`, `src/lib/*`
 
 ---
 
-## Phase 2 — Weekly Prescription + Logging
+## Phase 2 — Weekly Prescription + Logging ✅
 
 **Goal:** Tell the user exactly what to do *this week*, and let them log it.
 
@@ -89,7 +89,7 @@ Completed — see `src/screens/*`, `src/context/HabitsContext.tsx`, `src/lib/*`
 - Simple history list per habit
 
 ### Core logic
-- Weekly window (e.g. Monday–Sunday)
+- Weekly window (Monday–Sunday, local time)
 - Session requirement = `current.frequencyPerWeek`
 - Completion credit:
   - Full credit if duration >= prescribed
@@ -102,8 +102,8 @@ Completed — see `src/screens/*`, `src/context/HabitsContext.tsx`, `src/lib/*`
 - User can log complete / partial / skip
 - Weekly progress updates live
 
-### Estimated effort
-4–6 days
+### Status
+Completed — see `src/lib/prescription.ts`, `src/screens/LogSessionScreen.tsx`, weekly cards on Home/Detail
 
 ---
 
@@ -275,7 +275,7 @@ Target `5×60`, start `2×15`:
 |------:|-------|---------|--------|
 | 0 | Foundation | Runnable iPhone app shell | ✅ Done |
 | 1 | Goal creation | Target + start point saved | ✅ Done |
-| 2 | Prescription + logging | Weekly plan users can execute | Next |
+| 2 | Prescription + logging | Weekly plan users can execute | ✅ Done |
 | 3 | Progression engine | Auto level-up / hold / downshift | Planned |
 | 4 | Coaching UX | Feels supportive and guided | Planned |
 | 5 | Multi-habit management | Prevents overload | Planned |
@@ -326,7 +326,7 @@ src/
 
 ## Next implementation step
 
-Begin **Phase 2**:
-1. Generate a weekly prescription from `current` level
-2. Add session logging (complete / partial / skip)
-3. Show this-week progress on Home and Habit Detail
+Begin **Phase 3**:
+1. Generate a level ladder from start → target
+2. Evaluate end-of-week completion for level-up / hold / downshift
+3. Show level-up celebration and optional hold override
