@@ -185,8 +185,8 @@ export function CreateHabitScreen() {
           <Text style={styles.previewValue}>{formatLevel(preview.target)}</Text>
         </View>
         <Text style={styles.previewNote}>
-          Your current level will begin at the starting point. Progression comes
-          in a later phase.
+          Your current level begins here. Each week you’ll get a prescription
+          at this level and log sessions against it.
         </Text>
       </Card>
 
