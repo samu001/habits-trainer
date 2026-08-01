@@ -28,7 +28,9 @@ Example: want to work out **5× / week for 60 minutes**? Start at **2× / week f
 ## Requirements
 
 - Node.js 20+
-- Expo Go on your iPhone, or a Mac with Xcode for the iOS Simulator
+- Expo Go on your iPhone (**SDK 54** App Store build), or a Mac with Xcode for the iOS Simulator
+
+> Note: This project uses **Expo SDK 54** intentionally. Newer SDKs are not currently available in the iOS App Store Expo Go.
 
 ## Getting started
 
