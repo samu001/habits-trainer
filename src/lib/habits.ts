@@ -1,3 +1,4 @@
+import { defaultSchedule, normalizeSchedule } from './schedule';
 import type { CreateHabitInput, HabitGoal, HabitLevel, HabitPace } from '../types/habit';
 
 export function formatLevel(level: HabitLevel): string {
@@ -88,6 +89,10 @@ export function validateCreateHabitInput(
 
 export function createHabitGoal(input: CreateHabitInput): HabitGoal {
   const title = input.title.trim();
+  const schedule = normalizeSchedule(
+    input.schedule ?? defaultSchedule(input.start.frequencyPerWeek),
+    input.start.frequencyPerWeek,
+  );
 
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -98,6 +103,7 @@ export function createHabitGoal(input: CreateHabitInput): HabitGoal {
     pace: input.pace,
     createdAt: new Date().toISOString(),
     status: 'building',
+    schedule,
     holdLevel: false,
     strongWeeksAtLevel: 0,
     consecutiveLowWeeks: 0,

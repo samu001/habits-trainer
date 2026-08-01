@@ -14,7 +14,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.samu001.habitstrainer",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +30,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#5B6CFF"
+        }
+      ]
+    ]
   }
 }

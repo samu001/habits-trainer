@@ -8,7 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 
+import { parseBackup } from '../lib/backup';
 import { getWeekId } from '../lib/dates';
+import { hapticSuccess, hapticWarning } from '../lib/haptics';
 import { createHabitGoal, validateCreateHabitInput } from '../lib/habits';
 import { computeWeeklyLoad, deriveHabitStatus } from '../lib/load';
 import {
@@ -19,6 +21,8 @@ import {
   buildWeeklyProgress,
   createSessionLog,
 } from '../lib/prescription';
+import { syncHabitReminders } from '../lib/reminders';
+import { normalizeSchedule, syncScheduleToFrequency } from '../lib/schedule';
 import {
   loadHabits,
   loadLogs,
@@ -30,6 +34,7 @@ import {
 import type {
   CreateHabitInput,
   HabitGoal,
+  HabitSchedule,
   HabitStatus,
   WeeklyReflection,
 } from '../types/habit';
@@ -54,11 +59,16 @@ type HabitsContextValue = {
   deleteLog: (logId: string) => Promise<void>;
   setHoldLevel: (habitId: string, holdLevel: boolean) => Promise<void>;
   setHabitStatus: (habitId: string, status: HabitStatus) => Promise<void>;
+  updateSchedule: (
+    habitId: string,
+    schedule: Partial<HabitSchedule>,
+  ) => Promise<void>;
   evaluateWeek: (
     habitId: string,
     weekId?: string,
     reflection?: WeeklyReflection,
   ) => Promise<WeekEvaluationResult>;
+  restoreBackup: (raw: string) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -72,6 +82,21 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
 
+  const persistHabits = useCallback(async (next: HabitGoal[]) => {
+    setHabits(next);
+    await saveHabits(next);
+    try {
+      await syncHabitReminders(next);
+    } catch {
+      // Reminder sync should never block core persistence.
+    }
+  }, []);
+
+  const persistLogs = useCallback(async (next: SessionLog[]) => {
+    setLogs(next);
+    await saveLogs(next);
+  }, []);
+
   const refresh = useCallback(async () => {
     setError(null);
     try {
@@ -83,6 +108,11 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       setHabits(storedHabits);
       setLogs(storedLogs);
       setHasSeenOnboarding(onboardingSeen);
+      try {
+        await syncHabitReminders(storedHabits);
+      } catch {
+        // Ignore reminder permission failures on boot.
+      }
     } catch {
       setError('Could not load your habits.');
     } finally {
@@ -94,16 +124,6 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  const persistHabits = useCallback(async (next: HabitGoal[]) => {
-    setHabits(next);
-    await saveHabits(next);
-  }, []);
-
-  const persistLogs = useCallback(async (next: SessionLog[]) => {
-    setLogs(next);
-    await saveLogs(next);
-  }, []);
-
   const addHabit = useCallback(
     async (input: CreateHabitInput) => {
       const validationError = validateCreateHabitInput(input);
@@ -114,6 +134,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       const habit = createHabitGoal(input);
       const next = [habit, ...habits];
       await persistHabits(next);
+      await hapticSuccess();
       return habit;
     },
     [habits, persistHabits],
@@ -168,6 +189,11 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       const log = createSessionLog(input, habit.current.durationMinutes);
       const next = [log, ...logs];
       await persistLogs(next);
+      if (log.result === 'skipped') {
+        await hapticWarning();
+      } else {
+        await hapticSuccess();
+      }
       return log;
     },
     [habits, logs, persistLogs],
@@ -213,6 +239,26 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     [habits, persistHabits],
   );
 
+  const updateSchedule = useCallback(
+    async (habitId: string, schedule: Partial<HabitSchedule>) => {
+      const next = habits.map((habit) => {
+        if (habit.id !== habitId) {
+          return habit;
+        }
+        const merged = normalizeSchedule(
+          { ...habit.schedule, ...schedule },
+          habit.current.frequencyPerWeek,
+        );
+        return {
+          ...habit,
+          schedule: syncScheduleToFrequency(merged, habit.current),
+        };
+      });
+      await persistHabits(next);
+    },
+    [habits, persistHabits],
+  );
+
   const evaluateWeek = useCallback(
     async (
       habitId: string,
@@ -236,9 +282,25 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
         item.id === habitId ? result.habit : item,
       );
       await persistHabits(next);
+      if (result.decision.action === 'level_up') {
+        await hapticSuccess();
+      } else if (result.decision.action === 'downshift') {
+        await hapticWarning();
+      }
       return result;
     },
     [habits, logs, persistHabits],
+  );
+
+  const restoreBackup = useCallback(
+    async (raw: string) => {
+      const backup = parseBackup(raw);
+      await Promise.all([
+        persistHabits(backup.habits),
+        persistLogs(backup.logs),
+      ]);
+    },
+    [persistHabits, persistLogs],
   );
 
   const completeOnboarding = useCallback(async () => {
@@ -262,7 +324,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       deleteLog,
       setHoldLevel,
       setHabitStatus,
+      updateSchedule,
       evaluateWeek,
+      restoreBackup,
       completeOnboarding,
       refresh,
     }),
@@ -281,7 +345,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       deleteLog,
       setHoldLevel,
       setHabitStatus,
+      updateSchedule,
       evaluateWeek,
+      restoreBackup,
       completeOnboarding,
       refresh,
     ],

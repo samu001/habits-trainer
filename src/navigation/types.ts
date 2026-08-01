@@ -4,4 +4,5 @@ export type RootStackParamList = {
   HabitDetail: { habitId: string };
   LogSession: { habitId: string };
   WeeklyReview: { habitId: string };
+  Insights: undefined;
 };

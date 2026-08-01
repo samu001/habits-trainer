@@ -16,6 +16,18 @@ const habit: HabitGoal = {
   current: { frequencyPerWeek: 2, durationMinutes: 15 },
   pace: 'steady',
   createdAt: '2026-03-01T00:00:00.000Z',
+  status: 'building',
+  schedule: {
+    remindersEnabled: true,
+    preferredDays: [1, 3],
+    hour: 8,
+    minute: 0,
+  },
+  holdLevel: false,
+  strongWeeksAtLevel: 0,
+  consecutiveLowWeeks: 0,
+  weeksAtTarget: 0,
+  progressionHistory: [],
 };
 
 describe('prescription helpers', () => {

@@ -16,6 +16,7 @@ import { Card } from '../components/Card';
 import { CoachingCard } from '../components/CoachingCard';
 import { LevelPath } from '../components/LevelPath';
 import { LevelSummary } from '../components/LevelSummary';
+import { ScheduleEditor } from '../components/ScheduleEditor';
 import { Screen } from '../components/Screen';
 import { WeeklyPlanCard } from '../components/WeeklyPlanCard';
 import { useHabits } from '../context/HabitsContext';
@@ -31,6 +32,7 @@ import {
   formatProgressionAction,
   minStrongWeeksForPace,
 } from '../lib/progression';
+import { describeHabitReminder } from '../lib/reminders';
 import type { RootStackParamList } from '../navigation/types';
 import type { ProgressionEvent } from '../types/habit';
 import type { SessionLog } from '../types/logging';
@@ -108,6 +110,7 @@ export function HabitDetailScreen() {
     deleteLog,
     setHoldLevel,
     setHabitStatus,
+    updateSchedule,
     logs,
   } = useHabits();
 
@@ -241,6 +244,14 @@ export function HabitDetailScreen() {
           disabled={inactive || alreadyEvaluated}
         />
       </Card>
+
+      <ScheduleEditor
+        schedule={habit.schedule}
+        onChange={(schedule) => {
+          void updateSchedule(habit.id, schedule);
+        }}
+      />
+      <Text style={styles.reminderSummary}>{describeHabitReminder(habit)}</Text>
 
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Habit load controls</Text>
@@ -388,6 +399,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: -spacing.sm,
+  },
+  reminderSummary: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: -spacing.md,
   },
   holdRow: {
     flexDirection: 'row',

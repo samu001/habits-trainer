@@ -9,14 +9,19 @@ import {
   View,
 } from 'react-native';
 
+import { useMemo } from 'react';
+
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { LoadSummaryCard } from '../components/LoadSummaryCard';
 import { Screen } from '../components/Screen';
+import { TodaySummaryCard } from '../components/TodaySummaryCard';
 import { useHabits, useWeeklyLoad } from '../context/HabitsContext';
 import { getWeekId } from '../lib/dates';
 import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
+import { buildTodaySummaryLine } from '../lib/insights';
 import { deriveHabitStatus, formatHabitStatus } from '../lib/load';
+import { describeHabitReminder } from '../lib/reminders';
 import { minStrongWeeksForPace } from '../lib/progression';
 import type { RootStackParamList } from '../navigation/types';
 import type { HabitGoal } from '../types/habit';
@@ -45,6 +50,8 @@ function HabitListItem({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${habit.title}, ${formatHabitStatus(status)}`}
+      accessibilityHint="Opens habit details"
       onPress={onPress}
       style={({ pressed }) => [pressed && styles.pressed]}
     >
@@ -95,6 +102,9 @@ function HabitListItem({
           {habit.holdLevel ? ' · Holding' : ''}
           {reviewed ? ' · Reviewed' : ''}
         </Text>
+        <Text style={styles.progressLabel}>
+          {describeHabitReminder(habit)}
+        </Text>
 
         {!inactive ? (
           <Button
@@ -111,8 +121,13 @@ function HabitListItem({
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigation>();
-  const { habits, isLoading, error, refresh, getWeeklyProgress } = useHabits();
+  const { habits, logs, isLoading, error, refresh, getWeeklyProgress } =
+    useHabits();
   const load = useWeeklyLoad();
+  const todaySummary = useMemo(
+    () => buildTodaySummaryLine(habits, logs),
+    [habits, logs],
+  );
 
   const visibleHabits = habits.filter((habit) => habit.status !== 'archived');
   const archivedHabits = load.archivedHabits;
@@ -120,18 +135,28 @@ export function HomeScreen() {
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Habits Trainer</Text>
+        <Text style={styles.eyebrow} accessibilityRole="header">
+          Habits Trainer
+        </Text>
         <Text style={styles.title}>This week’s plan</Text>
         <Text style={styles.subtitle}>
           Start small, log honestly, review weekly, and protect your load.
         </Text>
       </View>
 
-      <Button
-        label="Create habit goal"
-        onPress={() => navigation.navigate('CreateHabit')}
-        style={styles.createButton}
-      />
+      <View style={styles.actions}>
+        <Button
+          label="Create habit goal"
+          onPress={() => navigation.navigate('CreateHabit')}
+          style={styles.createButton}
+          accessibilityHint="Starts a new habit goal"
+        />
+        <Button
+          label="Insights & backup"
+          variant="secondary"
+          onPress={() => navigation.navigate('Insights')}
+        />
+      </View>
 
       {isLoading ? (
         <View style={styles.centered}>
@@ -158,7 +183,12 @@ export function HomeScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={<LoadSummaryCard load={load} />}
+          ListHeaderComponent={
+            <View style={styles.listHeader}>
+              <TodaySummaryCard summary={todaySummary} />
+              <LoadSummaryCard load={load} />
+            </View>
+          }
           ListFooterComponent={
             archivedHabits.length > 0 ? (
               <Text style={styles.archivedNote}>
@@ -211,11 +241,18 @@ const styles = StyleSheet.create({
     ...typography.subtitle,
     color: colors.textSecondary,
   },
-  createButton: {
+  actions: {
+    gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  createButton: {
+    marginBottom: 0,
   },
   list: {
     flex: 1,
+  },
+  listHeader: {
+    gap: spacing.md,
   },
   listContent: {
     gap: spacing.md,

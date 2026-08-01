@@ -28,6 +28,16 @@ export type WeeklyReflection = {
   intention: ReflectionIntention;
 };
 
+/** JS Date.getDay() values: 0 Sunday … 6 Saturday */
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type HabitSchedule = {
+  remindersEnabled: boolean;
+  preferredDays: WeekdayIndex[];
+  hour: number;
+  minute: number;
+};
+
 export type HabitGoal = {
   id: string;
   title: string;
@@ -37,6 +47,7 @@ export type HabitGoal = {
   pace: HabitPace;
   createdAt: string;
   status: HabitStatus;
+  schedule: HabitSchedule;
   /** When true, strong weeks will not level up. */
   holdLevel: boolean;
   /** Consecutive strong weeks (>= 80%) at the current level. */
@@ -55,6 +66,7 @@ export type CreateHabitInput = {
   target: HabitLevel;
   start: HabitLevel;
   pace: HabitPace;
+  schedule?: Partial<HabitSchedule>;
 };
 
 export const PACE_OPTIONS: {
@@ -78,6 +90,8 @@ export const PACE_OPTIONS: {
     description: 'Faster ramp-up once you prove consistency.',
   },
 ];
+
+export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export const MAX_RECOMMENDED_BUILDING_HABITS = 3;
 export const WEEKLY_SESSION_LOAD_WARN = 12;

@@ -206,57 +206,48 @@ Completed — see `src/lib/load.ts`, LoadSummaryCard, create-habit caution, paus
 
 ---
 
-## Phase 6 — Reminders, Scheduling & Polish
+## Phase 6 — Reminders, Scheduling & Polish ✅
 
 **Goal:** Reduce friction and make daily use reliable.
 
 ### Features
 - Preferred days/times per habit
 - Local push notifications / reminders
-- Home-screen widget-friendly summary (later native)
+- Home-screen widget-friendly summary card
 - Empty states, error states, loading states
-- Haptics / micro-interactions on level-up and completion
-- Accessibility pass (Dynamic Type, contrast, VoiceOver labels)
+- Haptics on log/level-up/downshift
+- Accessibility labels/hints on key controls
 
 ### Core logic
-- Reminder schedule derived from weekly prescription + preferred times
+- Reminder schedule derived from preferred days/times
 - Missed-reminder does not punish user; it only nudges
 
-### Done when
-- Users get timely reminders
-- App feels polished enough for TestFlight
-
-### Estimated effort
-4–6 days
+### Status
+Completed — see `src/lib/reminders.ts`, `ScheduleEditor`, haptics, Today summary
 
 ---
 
-## Phase 7 — Insights, Templates & Expansion
+## Phase 7 — Insights, Templates & Expansion ✅
 
 **Goal:** Speed up setup and deepen long-term value.
 
 ### Features
 - Habit templates:
   - Fitness, reading, meditation, language, deep work
-- Pre-built ladders per template
+- Pre-built start/target defaults per template
 - Insights:
   - Best day of week
   - Average completion by habit
   - Time-to-target estimate
-- Export / backup data
-- Optional Apple Health integrations (workouts, mindfulness)
-- Optional cloud sync + accounts
+- Export / backup / restore JSON data
+- Deferred: Apple Health + cloud sync/accounts (called out in UI as future)
 
 ### Core logic
 - ETA to target based on pace + recent consistency
 - Template defaults still fully editable
 
-### Done when
-- New users can start in under 60 seconds via templates
-- Returning users get useful insights
-
-### Estimated effort
-1–2+ weeks (depending on integrations)
+### Status
+Completed — see `src/lib/templates.ts`, `src/lib/insights.ts`, Insights screen
 
 ---
 
@@ -268,10 +259,10 @@ Completed — see `src/lib/load.ts`, LoadSummaryCard, create-habit caution, paus
 | 1 | Goal creation | Target + start point saved | ✅ Done |
 | 2 | Prescription + logging | Weekly plan users can execute | ✅ Done |
 | 3 | Progression engine | Auto level-up / hold / downshift | ✅ Done |
-| 4 | Coaching UX | Feels supportive and guided | Planned |
-| 5 | Multi-habit management | Prevents overload | Planned |
-| 6 | Reminders + polish | Daily reliability | Planned |
-| 7 | Templates + insights | Faster setup, long-term retention | Planned |
+| 4 | Coaching UX | Feels supportive and guided | ✅ Done |
+| 5 | Multi-habit management | Prevents overload | ✅ Done |
+| 6 | Reminders + polish | Daily reliability | ✅ Done |
+| 7 | Templates + insights | Faster setup, long-term retention | ✅ Done |
 
 ---
 
@@ -317,7 +308,10 @@ src/
 
 ## Next implementation step
 
-Begin **Phase 4**:
-1. Add coaching copy and weekly reflection prompts
-2. Show momentum / consistency metrics
-3. Offer a minimum-viable fallback for hard days
+All planned phases (0–7) are implemented.
+
+Possible future expansions:
+1. Apple Health integrations
+2. Cloud sync + accounts
+3. Native home-screen widgets
+4. EAS / TestFlight production builds

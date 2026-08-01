@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CreateHabitScreen } from '../screens/CreateHabitScreen';
 import { HabitDetailScreen } from '../screens/HabitDetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { InsightsScreen } from '../screens/InsightsScreen';
 import { LogSessionScreen } from '../screens/LogSessionScreen';
 import { WeeklyReviewScreen } from '../screens/WeeklyReviewScreen';
 import { colors } from '../theme/tokens';
@@ -55,6 +56,11 @@ export function RootNavigator() {
           name="WeeklyReview"
           component={WeeklyReviewScreen}
           options={{ title: 'Weekly review' }}
+        />
+        <Stack.Screen
+          name="Insights"
+          component={InsightsScreen}
+          options={{ title: 'Insights' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

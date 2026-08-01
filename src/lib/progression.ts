@@ -1,5 +1,6 @@
 import { formatLevel, levelsEqual } from './habits';
 import { deriveHabitStatus } from './load';
+import { normalizeSchedule, syncScheduleToFrequency } from './schedule';
 import type {
   HabitGoal,
   HabitLevel,
@@ -322,6 +323,7 @@ export function applyWeekEvaluation(
   const updatedBase: HabitGoal = {
     ...habit,
     current: nextCurrent,
+    schedule: syncScheduleToFrequency(habit.schedule, nextCurrent),
     strongWeeksAtLevel: decision.strongWeeksAtLevel,
     consecutiveLowWeeks: decision.consecutiveLowWeeks,
     weeksAtTarget,
@@ -356,9 +358,14 @@ export function formatProgressionAction(action: ProgressionAction): string {
 
 export function normalizeHabitGoal(habit: HabitGoal): HabitGoal {
   const rawStatus = habit.status ?? 'building';
+  const schedule = normalizeSchedule(
+    habit.schedule,
+    habit.current?.frequencyPerWeek ?? habit.start?.frequencyPerWeek ?? 2,
+  );
   const normalized: HabitGoal = {
     ...habit,
     status: rawStatus,
+    schedule,
     holdLevel: Boolean(habit.holdLevel),
     strongWeeksAtLevel: habit.strongWeeksAtLevel ?? 0,
     consecutiveLowWeeks: habit.consecutiveLowWeeks ?? 0,

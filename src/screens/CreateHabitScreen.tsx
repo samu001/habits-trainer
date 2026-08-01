@@ -1,7 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -14,6 +21,10 @@ import {
   suggestStartFromTarget,
   validateCreateHabitInput,
 } from '../lib/habits';
+import {
+  HABIT_TEMPLATES,
+  type HabitTemplate,
+} from '../lib/templates';
 import type { RootStackParamList } from '../navigation/types';
 import {
   MAX_RECOMMENDED_BUILDING_HABITS,
@@ -41,9 +52,12 @@ export function CreateHabitScreen() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [hasEditedStart, setHasEditedStart] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (hasEditedStart) {
+    if (hasEditedStart || selectedTemplateId) {
       return;
     }
 
@@ -53,7 +67,19 @@ export function CreateHabitScreen() {
     });
     setStartFrequency(suggestion.frequencyPerWeek);
     setStartDuration(suggestion.durationMinutes);
-  }, [targetFrequency, targetDuration, hasEditedStart]);
+  }, [targetFrequency, targetDuration, hasEditedStart, selectedTemplateId]);
+
+  const applyTemplate = (template: HabitTemplate) => {
+    setSelectedTemplateId(template.id);
+    setTitle(template.title);
+    setTargetFrequency(template.target.frequencyPerWeek);
+    setTargetDuration(template.target.durationMinutes);
+    setStartFrequency(template.start.frequencyPerWeek);
+    setStartDuration(template.start.durationMinutes);
+    setPace(template.pace);
+    setHasEditedStart(true);
+    setError(null);
+  };
 
   const preview = useMemo(
     () => ({
@@ -116,9 +142,39 @@ export function CreateHabitScreen() {
     <Screen scroll contentStyle={styles.content}>
       <Text style={styles.title}>Create a habit goal</Text>
       <Text style={styles.subtitle}>
-        Define where you want to end up, then choose how small you want to
-        start. You can adjust the starting level freely.
+        Start from a template in under a minute, then tweak the target and
+        starting point.
       </Text>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Templates</Text>
+        <View style={styles.templates}>
+          {HABIT_TEMPLATES.map((template) => {
+            const selected = selectedTemplateId === template.id;
+            return (
+              <Pressable
+                key={template.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`${template.category} template`}
+                onPress={() => applyTemplate(template)}
+                style={[styles.template, selected && styles.templateSelected]}
+              >
+                <Text
+                  style={[
+                    styles.templateCategory,
+                    selected && styles.templateCategorySelected,
+                  ]}
+                >
+                  {template.category}
+                </Text>
+                <Text style={styles.templateTitle}>{template.title}</Text>
+                <Text style={styles.templateBody}>{template.description}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Card>
 
       {atCapacity ? (
         <Card style={styles.warningCard}>
@@ -259,6 +315,38 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: -spacing.sm,
+  },
+  templates: {
+    gap: spacing.sm,
+  },
+  template: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: 4,
+  },
+  templateSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  templateCategory: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  templateCategorySelected: {
+    color: colors.primaryDark,
+  },
+  templateTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  templateBody: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   label: {
     ...typography.label,
