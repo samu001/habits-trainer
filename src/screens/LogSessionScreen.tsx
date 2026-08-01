@@ -9,6 +9,7 @@ import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Stepper } from '../components/Stepper';
 import { useHabits } from '../context/HabitsContext';
+import { minimumViableMinutes } from '../lib/coaching';
 import type { RootStackParamList } from '../navigation/types';
 import type { SessionResult } from '../types/logging';
 import { colors, radii, spacing, typography } from '../theme/tokens';
@@ -55,6 +56,7 @@ export function LogSessionScreen() {
   const [saving, setSaving] = useState(false);
 
   const prescribedMinutes = weekly?.prescribedMinutes ?? habit?.current.durationMinutes ?? 0;
+  const minViable = minimumViableMinutes(prescribedMinutes || 15);
 
   const creditPreview = useMemo(() => {
     if (result === 'skipped') {
@@ -109,6 +111,23 @@ export function LogSessionScreen() {
           {prescribedMinutes} minutes.
         </Text>
       </View>
+
+      <Card style={styles.fallbackCard}>
+        <Text style={styles.fallbackLabel}>Hard-day fallback</Text>
+        <Text style={styles.fallbackText}>
+          Can’t do {prescribedMinutes} min? Do {minViable} min to keep the chain
+          alive — log it as partial.
+        </Text>
+        <Button
+          label={`Use ${minViable}-min fallback`}
+          variant="secondary"
+          onPress={() => {
+            setResult('partial');
+            setMinutesDone(minViable);
+            setError(null);
+          }}
+        />
+      </Card>
 
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>How did it go?</Text>
@@ -332,6 +351,21 @@ const styles = StyleSheet.create({
   previewHelp: {
     ...typography.caption,
     color: colors.primaryDark,
+  },
+  fallbackCard: {
+    gap: spacing.sm,
+    backgroundColor: colors.warningSoft,
+  },
+  fallbackLabel: {
+    ...typography.caption,
+    color: colors.warning,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  fallbackText: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
   },
   error: {
     ...typography.body,

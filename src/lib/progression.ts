@@ -1,10 +1,12 @@
 import { formatLevel, levelsEqual } from './habits';
+import { deriveHabitStatus } from './load';
 import type {
   HabitGoal,
   HabitLevel,
   HabitPace,
   ProgressionAction,
   ProgressionEvent,
+  WeeklyReflection,
 } from '../types/habit';
 import type { SessionLog } from '../types/logging';
 
@@ -270,13 +272,36 @@ export function applyWeekEvaluation(
   logs: SessionLog[],
   weekId: string,
   now: Date = new Date(),
+  reflection?: WeeklyReflection,
 ): WeekEvaluationResult {
+  if (habit.status === 'paused' || habit.status === 'archived') {
+    throw new Error('Resume this habit before reviewing a week.');
+  }
+
   if (habit.lastEvaluatedWeekId === weekId) {
     throw new Error('This week has already been evaluated.');
   }
 
   const completionRate = weekCompletionRate(habit, logs, weekId);
-  const decision = decideWeekEvaluation(habit, completionRate);
+  let decision = decideWeekEvaluation(habit, completionRate);
+
+  // Reflection intention can keep the user at the current level.
+  if (
+    reflection?.intention === 'hold' &&
+    (decision.action === 'level_up' || decision.action === 'downshift')
+  ) {
+    decision = {
+      ...decision,
+      action: 'hold',
+      nextLevel: habit.current,
+      strongWeeksAtLevel:
+        decision.action === 'level_up'
+          ? habit.strongWeeksAtLevel + 1
+          : 0,
+      message: `${decision.message} You chose to hold this level during reflection.`,
+    };
+  }
+
   const event: ProgressionEvent = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     weekId,
@@ -286,15 +311,27 @@ export function applyWeekEvaluation(
     to: { ...decision.nextLevel },
     message: decision.message,
     createdAt: now.toISOString(),
+    reflection,
+  };
+
+  const nextCurrent = { ...decision.nextLevel };
+  const weeksAtTarget = levelsEqual(nextCurrent, habit.target)
+    ? habit.weeksAtTarget + (decision.action === 'maintain' || decision.action === 'hold' ? 1 : 0)
+    : 0;
+
+  const updatedBase: HabitGoal = {
+    ...habit,
+    current: nextCurrent,
+    strongWeeksAtLevel: decision.strongWeeksAtLevel,
+    consecutiveLowWeeks: decision.consecutiveLowWeeks,
+    weeksAtTarget,
+    lastEvaluatedWeekId: weekId,
+    progressionHistory: [event, ...habit.progressionHistory].slice(0, 30),
   };
 
   const updated: HabitGoal = {
-    ...habit,
-    current: { ...decision.nextLevel },
-    strongWeeksAtLevel: decision.strongWeeksAtLevel,
-    consecutiveLowWeeks: decision.consecutiveLowWeeks,
-    lastEvaluatedWeekId: weekId,
-    progressionHistory: [event, ...habit.progressionHistory].slice(0, 30),
+    ...updatedBase,
+    status: deriveHabitStatus({ ...updatedBase, status: 'building' }),
   };
 
   return {
@@ -318,14 +355,26 @@ export function formatProgressionAction(action: ProgressionAction): string {
 }
 
 export function normalizeHabitGoal(habit: HabitGoal): HabitGoal {
-  return {
+  const rawStatus = habit.status ?? 'building';
+  const normalized: HabitGoal = {
     ...habit,
+    status: rawStatus,
     holdLevel: Boolean(habit.holdLevel),
     strongWeeksAtLevel: habit.strongWeeksAtLevel ?? 0,
     consecutiveLowWeeks: habit.consecutiveLowWeeks ?? 0,
+    weeksAtTarget: habit.weeksAtTarget ?? 0,
     lastEvaluatedWeekId: habit.lastEvaluatedWeekId,
     progressionHistory: Array.isArray(habit.progressionHistory)
       ? habit.progressionHistory
       : [],
+  };
+
+  if (rawStatus === 'paused' || rawStatus === 'archived') {
+    return normalized;
+  }
+
+  return {
+    ...normalized,
+    status: deriveHabitStatus({ ...normalized, status: 'building' }),
   };
 }

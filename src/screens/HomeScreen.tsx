@@ -11,10 +11,12 @@ import {
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { LoadSummaryCard } from '../components/LoadSummaryCard';
 import { Screen } from '../components/Screen';
-import { useHabits } from '../context/HabitsContext';
+import { useHabits, useWeeklyLoad } from '../context/HabitsContext';
 import { getWeekId } from '../lib/dates';
 import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
+import { deriveHabitStatus, formatHabitStatus } from '../lib/load';
 import { minStrongWeeksForPace } from '../lib/progression';
 import type { RootStackParamList } from '../navigation/types';
 import type { HabitGoal } from '../types/habit';
@@ -35,8 +37,10 @@ function HabitListItem({
   onLogPress: () => void;
 }) {
   const progress = progressTowardTarget(habit);
+  const status = deriveHabitStatus(habit);
   const reviewed = habit.lastEvaluatedWeekId === getWeekId();
   const minStrong = minStrongWeeksForPace(habit.pace);
+  const inactive = status === 'paused' || status === 'archived';
 
   return (
     <Pressable
@@ -44,27 +48,29 @@ function HabitListItem({
       onPress={onPress}
       style={({ pressed }) => [pressed && styles.pressed]}
     >
-      <Card style={styles.habitCard}>
+      <Card style={[styles.habitCard, inactive && styles.inactiveCard]}>
         <View style={styles.habitHeader}>
           <Text style={styles.habitTitle}>{habit.title}</Text>
+          <Text style={styles.statusBadge}>{formatHabitStatus(status)}</Text>
+        </View>
+
+        <View style={styles.weekStats}>
+          <Text style={styles.habitMeta}>Current: {formatLevel(habit.current)}</Text>
           <Text style={styles.paceBadge}>{formatPace(habit.pace)}</Text>
         </View>
 
-        <Text style={styles.habitMeta}>Current: {formatLevel(habit.current)}</Text>
-
-        {weekly ? (
+        {weekly && !inactive ? (
           <>
             <Text style={styles.prescription}>{weekly.prescriptionLabel}</Text>
             <View style={styles.weekStats}>
               <Text style={styles.habitMeta}>
-                This week: {weekly.earnedCredits.toFixed(
+                This week:{' '}
+                {weekly.earnedCredits.toFixed(
                   weekly.earnedCredits % 1 === 0 ? 0 : 1,
                 )}
                 /{weekly.requiredSessions} credits
               </Text>
-              <Text style={styles.habitMeta}>
-                {weekly.remainingSessions} left
-              </Text>
+              <Text style={styles.habitMeta}>{weekly.remainingSessions} left</Text>
             </View>
             <View style={styles.progressTrack}>
               <View
@@ -90,12 +96,14 @@ function HabitListItem({
           {reviewed ? ' · Reviewed' : ''}
         </Text>
 
-        <Button
-          label="Log session"
-          variant="secondary"
-          onPress={onLogPress}
-          style={styles.logButton}
-        />
+        {!inactive ? (
+          <Button
+            label="Log session"
+            variant="secondary"
+            onPress={onLogPress}
+            style={styles.logButton}
+          />
+        ) : null}
       </Card>
     </Pressable>
   );
@@ -104,6 +112,10 @@ function HabitListItem({
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigation>();
   const { habits, isLoading, error, refresh, getWeeklyProgress } = useHabits();
+  const load = useWeeklyLoad();
+
+  const visibleHabits = habits.filter((habit) => habit.status !== 'archived');
+  const archivedHabits = load.archivedHabits;
 
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
@@ -111,8 +123,7 @@ export function HomeScreen() {
         <Text style={styles.eyebrow}>Habits Trainer</Text>
         <Text style={styles.title}>This week’s plan</Text>
         <Text style={styles.subtitle}>
-          Start small, log honestly, and build toward your real goal one
-          manageable week at a time.
+          Start small, log honestly, review weekly, and protect your load.
         </Text>
       </View>
 
@@ -132,21 +143,30 @@ export function HomeScreen() {
           <Text style={styles.errorText}>{error}</Text>
           <Button label="Try again" variant="secondary" onPress={() => void refresh()} />
         </Card>
-      ) : habits.length === 0 ? (
+      ) : visibleHabits.length === 0 ? (
         <Card style={styles.messageCard}>
-          <Text style={styles.emptyTitle}>No habit goals yet</Text>
+          <Text style={styles.emptyTitle}>No active habit goals yet</Text>
           <Text style={styles.emptyBody}>
             Example: want to work out 5× / week for 60 minutes? Start with 2× /
-            week for 15 minutes, then log each session as you go.
+            week for 15 minutes, then grow from there.
           </Text>
         </Card>
       ) : (
         <FlatList
           style={styles.list}
-          data={habits}
+          data={visibleHabits}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={<LoadSummaryCard load={load} />}
+          ListFooterComponent={
+            archivedHabits.length > 0 ? (
+              <Text style={styles.archivedNote}>
+                {archivedHabits.length} archived habit
+                {archivedHabits.length === 1 ? '' : 's'} hidden from the main list.
+              </Text>
+            ) : null
+          }
           renderItem={({ item }) => (
             <HabitListItem
               habit={item}
@@ -204,6 +224,9 @@ const styles = StyleSheet.create({
   habitCard: {
     gap: spacing.sm,
   },
+  inactiveCard: {
+    opacity: 0.75,
+  },
   habitHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -216,7 +239,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
   },
-  paceBadge: {
+  statusBadge: {
     ...typography.caption,
     color: colors.primaryDark,
     backgroundColor: colors.primarySoft,
@@ -224,6 +247,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
+    fontWeight: '700',
+  },
+  paceBadge: {
+    ...typography.caption,
+    color: colors.textSecondary,
     fontWeight: '700',
   },
   prescription: {
@@ -236,6 +264,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.sm,
+    alignItems: 'center',
   },
   habitMeta: {
     ...typography.body,
@@ -259,6 +288,12 @@ const styles = StyleSheet.create({
   },
   logButton: {
     marginTop: spacing.xs,
+  },
+  archivedNote: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
   centered: {
     flex: 1,

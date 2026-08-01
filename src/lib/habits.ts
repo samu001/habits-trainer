@@ -97,9 +97,11 @@ export function createHabitGoal(input: CreateHabitInput): HabitGoal {
     current: { ...input.start },
     pace: input.pace,
     createdAt: new Date().toISOString(),
+    status: 'building',
     holdLevel: false,
     strongWeeksAtLevel: 0,
     consecutiveLowWeeks: 0,
+    weeksAtTarget: 0,
     progressionHistory: [],
   };
 }

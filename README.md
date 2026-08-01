@@ -9,7 +9,7 @@ Example: want to work out **5× / week for 60 minutes**? Start at **2× / week f
 ## What’s implemented
 
 ### Phase 0 — Foundation
-- Expo TypeScript app shell
+- Expo TypeScript app shell (SDK 54 for App Store Expo Go)
 - Design tokens and shared UI components
 - React Navigation stack
 
@@ -17,19 +17,28 @@ Example: want to work out **5× / week for 60 minutes**? Start at **2× / week f
 - Create habit flow (name, target, start, pace)
 - Local persistence with AsyncStorage
 - Home list + habit detail screens
-- Validation: start must be smaller than target
 
 ### Phase 2 — Weekly prescription + logging
 - This-week plan generated from current level
 - Log sessions as completed, partial, or skipped
 - Credit-based weekly completion rate
-- Session history per habit
 
 ### Phase 3 — Progression engine
 - Auto-generated level ladder from start → target
 - Weekly review: level up / hold / downshift
 - Manual “hold this level” override
-- Progress path + progression history
+
+### Phase 4 — Coaching + motivation
+- Onboarding (“start small, build up”)
+- Weekly reflection ritual
+- Consistency, level progress, and momentum metrics
+- Hard-day minimum viable fallback
+
+### Phase 5 — Multi-habit load management
+- Building / Maintaining / Paused / Archived states
+- Weekly load summary + sequencing tips
+- Soft caution when adding too many building habits
+- Pause / resume / archive controls
 
 ## Requirements
 
@@ -54,28 +63,14 @@ npm run ios
 ## Useful scripts
 
 ```bash
-npm start       # start Expo
-npm run ios     # iOS
+npm start
+npm run ios
 npm run typecheck
 npm test
-```
-
-## Project structure
-
-```text
-App.tsx
-src/
-  components/       # shared UI + WeeklyPlanCard
-  context/          # habits + session logs state
-  lib/              # validation, dates, prescription, storage
-  navigation/       # stack navigator
-  screens/          # Home, CreateHabit, HabitDetail, LogSession
-  theme/            # design tokens
-  types/            # HabitGoal + SessionLog types
 ```
 
 ## Implementation roadmap
 
 See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md).
 
-**Next up: Phase 4 — coaching experience + motivation.**
+**Next up: Phase 6 — reminders, scheduling & polish.**

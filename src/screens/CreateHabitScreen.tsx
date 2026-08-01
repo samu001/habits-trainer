@@ -1,21 +1,24 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { PaceSelector } from '../components/PaceSelector';
 import { Screen } from '../components/Screen';
 import { Stepper } from '../components/Stepper';
-import { useHabits } from '../context/HabitsContext';
+import { useHabits, useWeeklyLoad } from '../context/HabitsContext';
 import {
   formatLevel,
   suggestStartFromTarget,
   validateCreateHabitInput,
 } from '../lib/habits';
 import type { RootStackParamList } from '../navigation/types';
-import type { HabitPace } from '../types/habit';
+import {
+  MAX_RECOMMENDED_BUILDING_HABITS,
+  type HabitPace,
+} from '../types/habit';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 
 type CreateNavigation = NativeStackNavigationProp<
@@ -26,6 +29,8 @@ type CreateNavigation = NativeStackNavigationProp<
 export function CreateHabitScreen() {
   const navigation = useNavigation<CreateNavigation>();
   const { addHabit } = useHabits();
+  const load = useWeeklyLoad();
+  const atCapacity = load.isBuildingAtCapacity;
 
   const [title, setTitle] = useState('');
   const [targetFrequency, setTargetFrequency] = useState(5);
@@ -78,17 +83,33 @@ export function CreateHabitScreen() {
       return;
     }
 
-    setSaving(true);
-    setError(null);
+    const save = async () => {
+      setSaving(true);
+      setError(null);
 
-    try {
-      const habit = await addHabit(input);
-      navigation.replace('HabitDetail', { habitId: habit.id });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save habit.');
-    } finally {
-      setSaving(false);
+      try {
+        const habit = await addHabit(input);
+        navigation.replace('HabitDetail', { habitId: habit.id });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not save habit.');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    if (atCapacity) {
+      Alert.alert(
+        'That’s a lot of building habits',
+        `You already have ${load.buildingHabits.length} building habits. Most people succeed with ${MAX_RECOMMENDED_BUILDING_HABITS} or fewer. Add another anyway?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add anyway', onPress: () => void save() },
+        ],
+      );
+      return;
     }
+
+    await save();
   };
 
   return (
@@ -98,6 +119,16 @@ export function CreateHabitScreen() {
         Define where you want to end up, then choose how small you want to
         start. You can adjust the starting level freely.
       </Text>
+
+      {atCapacity ? (
+        <Card style={styles.warningCard}>
+          <Text style={styles.warningTitle}>Load caution</Text>
+          <Text style={styles.warningBody}>
+            You already have {load.buildingHabits.length} building habits.
+            Consider locking one in (or pausing one) before adding another.
+          </Text>
+        </Card>
+      ) : null}
 
       <Card style={styles.section}>
         <Text style={styles.label}>Habit name</Text>
@@ -267,6 +298,19 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.primaryDark,
     marginTop: spacing.xs,
+  },
+  warningCard: {
+    gap: spacing.sm,
+    backgroundColor: colors.warningSoft,
+  },
+  warningTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.warning,
+  },
+  warningBody: {
+    ...typography.body,
+    color: colors.text,
   },
   error: {
     ...typography.body,

@@ -10,6 +10,7 @@ import {
 
 import { getWeekId } from '../lib/dates';
 import { createHabitGoal, validateCreateHabitInput } from '../lib/habits';
+import { computeWeeklyLoad, deriveHabitStatus } from '../lib/load';
 import {
   applyWeekEvaluation,
   type WeekEvaluationResult,
@@ -21,10 +22,17 @@ import {
 import {
   loadHabits,
   loadLogs,
+  loadOnboardingSeen,
   saveHabits,
   saveLogs,
+  saveOnboardingSeen,
 } from '../lib/storage';
-import type { CreateHabitInput, HabitGoal } from '../types/habit';
+import type {
+  CreateHabitInput,
+  HabitGoal,
+  HabitStatus,
+  WeeklyReflection,
+} from '../types/habit';
 import type {
   LogSessionInput,
   SessionLog,
@@ -36,6 +44,7 @@ type HabitsContextValue = {
   logs: SessionLog[];
   isLoading: boolean;
   error: string | null;
+  hasSeenOnboarding: boolean;
   addHabit: (input: CreateHabitInput) => Promise<HabitGoal>;
   deleteHabit: (id: string) => Promise<void>;
   getHabit: (id: string) => HabitGoal | undefined;
@@ -44,10 +53,13 @@ type HabitsContextValue = {
   logSession: (input: LogSessionInput) => Promise<SessionLog>;
   deleteLog: (logId: string) => Promise<void>;
   setHoldLevel: (habitId: string, holdLevel: boolean) => Promise<void>;
+  setHabitStatus: (habitId: string, status: HabitStatus) => Promise<void>;
   evaluateWeek: (
     habitId: string,
     weekId?: string,
+    reflection?: WeeklyReflection,
   ) => Promise<WeekEvaluationResult>;
+  completeOnboarding: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -58,16 +70,19 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<SessionLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
 
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [storedHabits, storedLogs] = await Promise.all([
+      const [storedHabits, storedLogs, onboardingSeen] = await Promise.all([
         loadHabits(),
         loadLogs(),
+        loadOnboardingSeen(),
       ]);
       setHabits(storedHabits);
       setLogs(storedLogs);
+      setHasSeenOnboarding(onboardingSeen);
     } catch {
       setError('Could not load your habits.');
     } finally {
@@ -146,6 +161,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       if (!habit) {
         throw new Error('Habit not found.');
       }
+      if (habit.status === 'paused' || habit.status === 'archived') {
+        throw new Error('Resume this habit before logging sessions.');
+      }
 
       const log = createSessionLog(input, habit.current.durationMinutes);
       const next = [log, ...logs];
@@ -173,15 +191,47 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     [habits, persistHabits],
   );
 
+  const setHabitStatus = useCallback(
+    async (habitId: string, status: HabitStatus) => {
+      const next = habits.map((habit) => {
+        if (habit.id !== habitId) {
+          return habit;
+        }
+
+        if (status === 'paused' || status === 'archived') {
+          return { ...habit, status };
+        }
+
+        const resumed = { ...habit, status: 'building' as const };
+        return {
+          ...resumed,
+          status: deriveHabitStatus(resumed),
+        };
+      });
+      await persistHabits(next);
+    },
+    [habits, persistHabits],
+  );
+
   const evaluateWeek = useCallback(
-    async (habitId: string, weekId?: string) => {
+    async (
+      habitId: string,
+      weekId?: string,
+      reflection?: WeeklyReflection,
+    ) => {
       const habit = habits.find((item) => item.id === habitId);
       if (!habit) {
         throw new Error('Habit not found.');
       }
 
       const targetWeekId = weekId ?? getWeekId();
-      const result = applyWeekEvaluation(habit, logs, targetWeekId);
+      const result = applyWeekEvaluation(
+        habit,
+        logs,
+        targetWeekId,
+        new Date(),
+        reflection,
+      );
       const next = habits.map((item) =>
         item.id === habitId ? result.habit : item,
       );
@@ -191,12 +241,18 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     [habits, logs, persistHabits],
   );
 
+  const completeOnboarding = useCallback(async () => {
+    setHasSeenOnboarding(true);
+    await saveOnboardingSeen(true);
+  }, []);
+
   const value = useMemo(
     () => ({
       habits,
       logs,
       isLoading,
       error,
+      hasSeenOnboarding,
       addHabit,
       deleteHabit,
       getHabit,
@@ -205,7 +261,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       logSession,
       deleteLog,
       setHoldLevel,
+      setHabitStatus,
       evaluateWeek,
+      completeOnboarding,
       refresh,
     }),
     [
@@ -213,6 +271,7 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       logs,
       isLoading,
       error,
+      hasSeenOnboarding,
       addHabit,
       deleteHabit,
       getHabit,
@@ -221,7 +280,9 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       logSession,
       deleteLog,
       setHoldLevel,
+      setHabitStatus,
       evaluateWeek,
+      completeOnboarding,
       refresh,
     ],
   );
@@ -237,4 +298,9 @@ export function useHabits() {
     throw new Error('useHabits must be used within HabitsProvider');
   }
   return context;
+}
+
+export function useWeeklyLoad() {
+  const { habits } = useHabits();
+  return useMemo(() => computeWeeklyLoad(habits), [habits]);
 }

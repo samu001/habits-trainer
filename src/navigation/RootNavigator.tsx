@@ -5,6 +5,7 @@ import { CreateHabitScreen } from '../screens/CreateHabitScreen';
 import { HabitDetailScreen } from '../screens/HabitDetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LogSessionScreen } from '../screens/LogSessionScreen';
+import { WeeklyReviewScreen } from '../screens/WeeklyReviewScreen';
 import { colors } from '../theme/tokens';
 import type { RootStackParamList } from './types';
 
@@ -49,6 +50,11 @@ export function RootNavigator() {
           name="LogSession"
           component={LogSessionScreen}
           options={{ title: 'Log session' }}
+        />
+        <Stack.Screen
+          name="WeeklyReview"
+          component={WeeklyReviewScreen}
+          options={{ title: 'Weekly review' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

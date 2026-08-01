@@ -6,6 +6,7 @@ import type { SessionLog, SessionResult } from '../types/logging';
 
 const HABITS_KEY = 'habits-trainer/habits/v1';
 const LOGS_KEY = 'habits-trainer/logs/v1';
+const ONBOARDING_KEY = 'habits-trainer/onboarding/v1';
 
 function isHabitLevel(value: unknown): value is HabitLevel {
   if (!value || typeof value !== 'object') {
@@ -101,4 +102,13 @@ export async function loadLogs(): Promise<SessionLog[]> {
 
 export async function saveLogs(logs: SessionLog[]): Promise<void> {
   await AsyncStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+}
+
+export async function loadOnboardingSeen(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem(ONBOARDING_KEY);
+  return raw === 'true';
+}
+
+export async function saveOnboardingSeen(seen: boolean): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDING_KEY, seen ? 'true' : 'false');
 }

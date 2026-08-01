@@ -153,7 +153,7 @@ Completed — see `src/lib/progression.ts`, LevelPath, weekly review on Habit De
 
 ---
 
-## Phase 4 — Coaching Experience + Motivation
+## Phase 4 — Coaching Experience + Motivation ✅
 
 **Goal:** Make the app feel like a guide, not a tracker.
 
@@ -178,23 +178,18 @@ Completed — see `src/lib/progression.ts`, LevelPath, weekly review on Habit De
 - Identity framing copy based on habit category
 - Bad-day fallback = ~30–50% of current duration, same intention
 
-### Done when
-- Weekly review exists
-- Users get contextual coaching messages
-- Progress metrics feel encouraging and fair
-
-### Estimated effort
-4–6 days
+### Status
+Completed — see `src/lib/coaching.ts`, Onboarding, WeeklyReview, CoachingCard
 
 ---
 
-## Phase 5 — Multi-Habit Load Management
+## Phase 5 — Multi-Habit Load Management ✅
 
 **Goal:** Help users succeed with more than one habit without burnout.
 
 ### Features
 - Limit active “building” habits (recommend max 1–3)
-- Habit states: Building / Maintaining / Paused
+- Habit states: Building / Maintaining / Paused / Archived
 - Total weekly load indicator
 - Suggestions to sequence habits
   - “Lock in Habit A before adding Habit B”
@@ -202,16 +197,12 @@ Completed — see `src/lib/progression.ts`, LevelPath, weekly review on Habit De
 
 ### Core logic
 - Building habit = current < target
-- Maintaining habit = current == target for N weeks
+- Maintaining habit = current == target
 - Warn when total prescribed sessions/time crosses a threshold
 - Soft gate: creating a 3rd+ building habit shows a caution
 
-### Done when
-- Users can manage multiple habits thoughtfully
-- App discourages overcommitment
-
-### Estimated effort
-3–5 days
+### Status
+Completed — see `src/lib/load.ts`, LoadSummaryCard, create-habit caution, pause/archive controls
 
 ---
 

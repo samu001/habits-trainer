@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useMemo } from 'react';
 import {
   Alert,
   Pressable,
@@ -13,13 +13,16 @@ import {
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { CoachingCard } from '../components/CoachingCard';
 import { LevelPath } from '../components/LevelPath';
 import { LevelSummary } from '../components/LevelSummary';
 import { Screen } from '../components/Screen';
 import { WeeklyPlanCard } from '../components/WeeklyPlanCard';
 import { useHabits } from '../context/HabitsContext';
+import { buildCoachingSnapshot } from '../lib/coaching';
 import { formatLoggedAt, getWeekId } from '../lib/dates';
 import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
+import { deriveHabitStatus, formatHabitStatus } from '../lib/load';
 import {
   formatCredit,
   formatSessionResult,
@@ -85,6 +88,11 @@ function ProgressionHistoryItem({ event }: { event: ProgressionEvent }) {
         {formatLevel(event.from)} → {formatLevel(event.to)}
       </Text>
       <Text style={styles.historyNote}>{event.message}</Text>
+      {event.reflection?.wentWell ? (
+        <Text style={styles.historyMeta}>
+          Went well: {event.reflection.wentWell}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -99,13 +107,18 @@ export function HabitDetailScreen() {
     getLogsForHabit,
     deleteLog,
     setHoldLevel,
-    evaluateWeek,
+    setHabitStatus,
+    logs,
   } = useHabits();
-  const [evaluating, setEvaluating] = useState(false);
 
   const habit = getHabit(route.params.habitId);
 
-  if (!habit) {
+  const coaching = useMemo(
+    () => (habit ? buildCoachingSnapshot(habit, logs) : null),
+    [habit, logs],
+  );
+
+  if (!habit || !coaching) {
     return (
       <Screen contentStyle={styles.missingContent}>
         <Card style={styles.section}>
@@ -125,6 +138,8 @@ export function HabitDetailScreen() {
   const weekId = getWeekId();
   const alreadyEvaluated = habit.lastEvaluatedWeekId === weekId;
   const minStrongWeeks = minStrongWeeksForPace(habit.pace);
+  const status = deriveHabitStatus(habit);
+  const inactive = status === 'paused' || status === 'archived';
 
   const onDelete = () => {
     Alert.alert(
@@ -159,42 +174,20 @@ export function HabitDetailScreen() {
     ]);
   };
 
-  const onEvaluateWeek = async () => {
-    setEvaluating(true);
-    try {
-      const result = await evaluateWeek(habit.id, weekId);
-      const title =
-        result.decision.action === 'level_up'
-          ? 'Level up!'
-          : result.decision.action === 'downshift'
-            ? 'Downshift'
-            : result.decision.action === 'maintain'
-              ? 'Target maintained'
-              : 'Week reviewed';
-
-      Alert.alert(title, result.decision.message);
-    } catch (err) {
-      Alert.alert(
-        'Could not evaluate week',
-        err instanceof Error ? err.message : 'Something went wrong.',
-      );
-    } finally {
-      setEvaluating(false);
-    }
-  };
-
   return (
     <Screen scroll contentStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Habit goal</Text>
+        <Text style={styles.eyebrow}>Habit goal · {formatHabitStatus(status)}</Text>
         <Text style={styles.title}>{habit.title}</Text>
         <Text style={styles.subtitle}>
-          Log sessions this week, then review to level up, hold, or gently
-          downshift.
+          Log sessions, take the weekly ritual, and let coaching protect your
+          momentum.
         </Text>
       </View>
 
-      {weekly ? (
+      <CoachingCard coaching={coaching} />
+
+      {weekly && !inactive ? (
         <WeeklyPlanCard
           progress={weekly}
           onLogPress={() =>
@@ -204,10 +197,10 @@ export function HabitDetailScreen() {
       ) : null}
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Weekly review</Text>
+        <Text style={styles.sectionTitle}>Weekly review ritual</Text>
         <Text style={styles.reviewHelp}>
-          Strong week (≥80%) builds toward a level-up. Medium weeks hold. Two
-          weak weeks (&lt;50%) can downshift.
+          Reflect on what went well, choose keep/hold/adjust, then apply
+          progression.
         </Text>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Strong weeks at level</Text>
@@ -235,11 +228,52 @@ export function HabitDetailScreen() {
           />
         </View>
         <Button
-          label={alreadyEvaluated ? 'Week already reviewed' : 'Review this week'}
-          onPress={() => void onEvaluateWeek()}
-          loading={evaluating}
-          disabled={alreadyEvaluated}
+          label={
+            inactive
+              ? 'Resume to review'
+              : alreadyEvaluated
+                ? 'Week already reviewed'
+                : 'Start weekly review'
+          }
+          onPress={() =>
+            navigation.navigate('WeeklyReview', { habitId: habit.id })
+          }
+          disabled={inactive || alreadyEvaluated}
         />
+      </Card>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Habit load controls</Text>
+        <Text style={styles.reviewHelp}>
+          Pause when life gets heavy. Archive to hide from your main list.
+        </Text>
+        {status === 'paused' ? (
+          <Button
+            label="Resume habit"
+            variant="secondary"
+            onPress={() => void setHabitStatus(habit.id, 'building')}
+          />
+        ) : (
+          <Button
+            label="Pause habit"
+            variant="secondary"
+            onPress={() => void setHabitStatus(habit.id, 'paused')}
+            disabled={status === 'archived'}
+          />
+        )}
+        {status === 'archived' ? (
+          <Button
+            label="Unarchive habit"
+            variant="ghost"
+            onPress={() => void setHabitStatus(habit.id, 'building')}
+          />
+        ) : (
+          <Button
+            label="Archive habit"
+            variant="ghost"
+            onPress={() => void setHabitStatus(habit.id, 'archived')}
+          />
+        )}
       </Card>
 
       <LevelPath habit={habit} />
@@ -284,7 +318,7 @@ export function HabitDetailScreen() {
         <Text style={styles.sectionTitle}>Progression history</Text>
         {habit.progressionHistory.length === 0 ? (
           <Text style={styles.emptyHistory}>
-            No weekly reviews yet. After logging, tap “Review this week”.
+            No weekly reviews yet. After logging, start the weekly ritual.
           </Text>
         ) : (
           <View style={styles.historyList}>
@@ -302,15 +336,15 @@ export function HabitDetailScreen() {
           <Text style={styles.detailValue}>{formatPace(habit.pace)}</Text>
         </View>
         <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Status</Text>
+          <Text style={styles.detailValue}>{formatHabitStatus(status)}</Text>
+        </View>
+        <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Created</Text>
           <Text style={styles.detailValue}>
             {new Date(habit.createdAt).toLocaleDateString()}
           </Text>
         </View>
-        <Text style={styles.comingSoon}>
-          Next up in Phase 4: coaching copy, weekly reflection prompts, and
-          momentum metrics.
-        </Text>
       </Card>
 
       <Button label="Back to habits" variant="secondary" onPress={() => navigation.navigate('Home')} />
@@ -401,13 +435,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontWeight: '700',
     color: colors.text,
-  },
-  comingSoon: {
-    ...typography.caption,
-    color: colors.textMuted,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radii.sm,
-    padding: spacing.md,
   },
   emptyHistory: {
     ...typography.body,
