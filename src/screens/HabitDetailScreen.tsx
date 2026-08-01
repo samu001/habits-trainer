@@ -120,7 +120,10 @@ export function HabitDetailScreen() {
       <Screen contentStyle={styles.missingContent}>
         <Card style={styles.section}>
           <Text style={styles.title}>Quest not found</Text>
-          <Button label="Back to arc" onPress={() => navigation.navigate('Home')} />
+          <Button
+            label="Back to arc"
+            onPress={() => navigation.navigate('MainTabs', { screen: 'Today' })}
+          />
         </Card>
       </Screen>
     );
@@ -147,7 +150,7 @@ export function HabitDetailScreen() {
           onPress: () => {
             void (async () => {
               await deleteHabit(habit.id);
-              navigation.navigate('Home');
+              navigation.navigate('MainTabs', { screen: 'Today' });
             })();
           },
         },
@@ -310,7 +313,11 @@ export function HabitDetailScreen() {
         )}
       </Card>
 
-      <Button label="Back to arc" variant="ink" onPress={() => navigation.navigate('Home')} />
+      <Button
+        label="Back to arc"
+        variant="ink"
+        onPress={() => navigation.navigate('MainTabs', { screen: 'Today' })}
+      />
       <Button label="Delete quest" variant="danger" onPress={onDelete} />
     </Screen>
   );

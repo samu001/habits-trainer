@@ -3,11 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { CreateHabitScreen } from '../screens/CreateHabitScreen';
 import { HabitDetailScreen } from '../screens/HabitDetailScreen';
-import { HomeScreen } from '../screens/HomeScreen';
-import { InsightsScreen } from '../screens/InsightsScreen';
 import { LogSessionScreen } from '../screens/LogSessionScreen';
 import { WeeklyReviewScreen } from '../screens/WeeklyReviewScreen';
 import { colors } from '../theme/tokens';
+import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -16,7 +15,7 @@ export function RootNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="MainTabs"
         screenOptions={{
           headerShadowVisible: false,
           headerTintColor: colors.primaryDark,
@@ -33,8 +32,8 @@ export function RootNavigator() {
         }}
       >
         <Stack.Screen
-          name="Home"
-          component={HomeScreen}
+          name="MainTabs"
+          component={MainTabs}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -56,11 +55,6 @@ export function RootNavigator() {
           name="WeeklyReview"
           component={WeeklyReviewScreen}
           options={{ title: 'Weekly ritual' }}
-        />
-        <Stack.Screen
-          name="Insights"
-          component={InsightsScreen}
-          options={{ title: 'Arc insights' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
