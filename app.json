@@ -23,8 +23,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.samu001.habitstrainer",
-      "predictiveBackGestureEnabled": false
+      "package": "com.samu001.habitstrainer"
     },
     "web": {
       "favicon": "./assets/favicon.png"
