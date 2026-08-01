@@ -1,122 +1,37 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { useMemo } from 'react';
-
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { LoadSummaryCard } from '../components/LoadSummaryCard';
+import { QuestCard } from '../components/QuestCard';
 import { Screen } from '../components/Screen';
-import { TodaySummaryCard } from '../components/TodaySummaryCard';
 import { useHabits, useWeeklyLoad } from '../context/HabitsContext';
-import { getWeekId } from '../lib/dates';
-import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
 import { buildTodaySummaryLine } from '../lib/insights';
-import { deriveHabitStatus, formatHabitStatus } from '../lib/load';
-import { describeHabitReminder } from '../lib/reminders';
-import { minStrongWeeksForPace } from '../lib/progression';
+import { deriveHabitStatus } from '../lib/load';
 import type { RootStackParamList } from '../navigation/types';
-import type { HabitGoal } from '../types/habit';
-import type { WeeklyProgress } from '../types/logging';
-import { colors, radii, spacing, typography } from '../theme/tokens';
+import { colors, spacing, typography } from '../theme/tokens';
 
 type HomeNavigation = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
-function HabitListItem({
-  habit,
-  weekly,
-  onPress,
-  onLogPress,
-}: {
-  habit: HabitGoal;
-  weekly: WeeklyProgress | null;
-  onPress: () => void;
-  onLogPress: () => void;
-}) {
-  const progress = progressTowardTarget(habit);
-  const status = deriveHabitStatus(habit);
-  const reviewed = habit.lastEvaluatedWeekId === getWeekId();
-  const minStrong = minStrongWeeksForPace(habit.pace);
-  const inactive = status === 'paused' || status === 'archived';
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${habit.title}, ${formatHabitStatus(status)}`}
-      accessibilityHint="Opens habit details"
-      onPress={onPress}
-      style={({ pressed }) => [pressed && styles.pressed]}
-    >
-      <Card style={[styles.habitCard, inactive && styles.inactiveCard]}>
-        <View style={styles.habitHeader}>
-          <Text style={styles.habitTitle}>{habit.title}</Text>
-          <Text style={styles.statusBadge}>{formatHabitStatus(status)}</Text>
-        </View>
-
-        <View style={styles.weekStats}>
-          <Text style={styles.habitMeta}>Current: {formatLevel(habit.current)}</Text>
-          <Text style={styles.paceBadge}>{formatPace(habit.pace)}</Text>
-        </View>
-
-        {weekly && !inactive ? (
-          <>
-            <Text style={styles.prescription}>{weekly.prescriptionLabel}</Text>
-            <View style={styles.weekStats}>
-              <Text style={styles.habitMeta}>
-                This week:{' '}
-                {weekly.earnedCredits.toFixed(
-                  weekly.earnedCredits % 1 === 0 ? 0 : 1,
-                )}
-                /{weekly.requiredSessions} credits
-              </Text>
-              <Text style={styles.habitMeta}>{weekly.remainingSessions} left</Text>
-            </View>
-            <View style={styles.progressTrack}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${weekly.completionRate * 100}%` },
-                ]}
-              />
-            </View>
-          </>
-        ) : (
-          <View style={styles.progressTrack}>
-            <View
-              style={[styles.progressFill, { width: `${progress * 100}%` }]}
-            />
-          </View>
-        )}
-
-        <Text style={styles.progressLabel}>
-          Goal path: {Math.round(progress * 100)}% · Strong weeks{' '}
-          {habit.strongWeeksAtLevel}/{minStrong}
-          {habit.holdLevel ? ' · Holding' : ''}
-          {reviewed ? ' · Reviewed' : ''}
-        </Text>
-        <Text style={styles.progressLabel}>
-          {describeHabitReminder(habit)}
-        </Text>
-
-        {!inactive ? (
-          <Button
-            label="Log session"
-            variant="secondary"
-            onPress={onLogPress}
-            style={styles.logButton}
-          />
-        ) : null}
-      </Card>
-    </Pressable>
-  );
+function coachOpening(activeCount: number, remainingSessions: number): string {
+  if (activeCount === 0) {
+    return 'Your training arc is waiting for its first quest.';
+  }
+  if (remainingSessions === 0) {
+    return 'This week’s reps are done. Protect the win.';
+  }
+  if (remainingSessions <= 2) {
+    return 'Almost there — finish clean, not perfect.';
+  }
+  return 'This week: protect the spark. Small reps, honest logs.';
 }
 
 export function HomeScreen() {
@@ -124,35 +39,56 @@ export function HomeScreen() {
   const { habits, logs, isLoading, error, refresh, getWeeklyProgress } =
     useHabits();
   const load = useWeeklyLoad();
+
+  const visibleHabits = useMemo(
+    () => habits.filter((habit) => habit.status !== 'archived'),
+    [habits],
+  );
+
+  const activeHabits = useMemo(
+    () =>
+      visibleHabits.filter((habit) => {
+        const status = deriveHabitStatus(habit);
+        return status === 'building' || status === 'maintaining';
+      }),
+    [visibleHabits],
+  );
+
+  const hero = activeHabits[0] ?? visibleHabits[0];
+  const rest = visibleHabits.filter((habit) => habit.id !== hero?.id);
+
+  const remainingSessions = useMemo(
+    () =>
+      activeHabits.reduce((sum, habit) => {
+        const weekly = getWeeklyProgress(habit.id);
+        return sum + (weekly?.remainingSessions ?? 0);
+      }, 0),
+    [activeHabits, getWeeklyProgress],
+  );
+
   const todaySummary = useMemo(
     () => buildTodaySummaryLine(habits, logs),
     [habits, logs],
   );
 
-  const visibleHabits = habits.filter((habit) => habit.status !== 'archived');
-  const archivedHabits = load.archivedHabits;
-
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow} accessibilityRole="header">
-          Habits Trainer
+        <Text style={styles.eyebrow}>Training Arc</Text>
+        <Text style={styles.title}>
+          {coachOpening(activeHabits.length, remainingSessions)}
         </Text>
-        <Text style={styles.title}>This week’s plan</Text>
-        <Text style={styles.subtitle}>
-          Start small, log honestly, review weekly, and protect your load.
-        </Text>
+        <Text style={styles.subtitle}>{todaySummary}</Text>
       </View>
 
       <View style={styles.actions}>
         <Button
-          label="Create habit goal"
+          label="Begin a new quest"
           onPress={() => navigation.navigate('CreateHabit')}
-          style={styles.createButton}
-          accessibilityHint="Starts a new habit goal"
+          accessibilityHint="Create a habit goal"
         />
         <Button
-          label="Insights & backup"
+          label="Arc insights"
           variant="secondary"
           onPress={() => navigation.navigate('Insights')}
         />
@@ -160,8 +96,8 @@ export function HomeScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={colors.primary} />
-          <Text style={styles.centeredText}>Loading your habits...</Text>
+          <ActivityIndicator color={colors.primaryDark} />
+          <Text style={styles.centeredText}>Loading your arc...</Text>
         </View>
       ) : error ? (
         <Card style={styles.messageCard}>
@@ -169,37 +105,59 @@ export function HomeScreen() {
           <Button label="Try again" variant="secondary" onPress={() => void refresh()} />
         </Card>
       ) : visibleHabits.length === 0 ? (
-        <Card style={styles.messageCard}>
-          <Text style={styles.emptyTitle}>No active habit goals yet</Text>
+        <Card variant="gold" style={styles.messageCard}>
+          <Text style={styles.emptyEmoji}>⚔️</Text>
+          <Text style={styles.emptyTitle}>No quests yet</Text>
           <Text style={styles.emptyBody}>
-            Example: want to work out 5× / week for 60 minutes? Start with 2× /
-            week for 15 minutes, then grow from there.
+            Want 5×60 workouts someday? Start at 2×15. The arc rewards honesty
+            over heroics.
           </Text>
         </Card>
       ) : (
         <FlatList
           style={styles.list}
-          data={visibleHabits}
+          data={rest}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <View style={styles.listHeader}>
-              <TodaySummaryCard summary={todaySummary} />
-              <LoadSummaryCard load={load} />
+              {hero ? (
+                <QuestCard
+                  habit={hero}
+                  logs={logs}
+                  weekly={getWeeklyProgress(hero.id)}
+                  featured
+                  onPress={() =>
+                    navigation.navigate('HabitDetail', { habitId: hero.id })
+                  }
+                  onLogPress={() =>
+                    navigation.navigate('LogSession', { habitId: hero.id })
+                  }
+                />
+              ) : null}
+
+              <Card style={styles.loadCard}>
+                <Text style={styles.loadTitle}>Weekly load</Text>
+                <Text style={styles.loadBody}>
+                  {load.buildingHabits.length} building ·{' '}
+                  {load.maintainingHabits.length} maintaining ·{' '}
+                  {load.totalSessions} sessions · {load.totalMinutes} min
+                </Text>
+                {load.sequencingTip ? (
+                  <Text style={styles.loadTip}>{load.sequencingTip}</Text>
+                ) : null}
+              </Card>
+
+              {rest.length > 0 ? (
+                <Text style={styles.sectionLabel}>Other quests</Text>
+              ) : null}
             </View>
           }
-          ListFooterComponent={
-            archivedHabits.length > 0 ? (
-              <Text style={styles.archivedNote}>
-                {archivedHabits.length} archived habit
-                {archivedHabits.length === 1 ? '' : 's'} hidden from the main list.
-              </Text>
-            ) : null
-          }
           renderItem={({ item }) => (
-            <HabitListItem
+            <QuestCard
               habit={item}
+              logs={logs}
               weekly={getWeeklyProgress(item.id)}
               onPress={() =>
                 navigation.navigate('HabitDetail', { habitId: item.id })
@@ -225,17 +183,16 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
-    marginBottom: spacing.sm,
   },
   title: {
     ...typography.title,
     color: colors.text,
-    marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.subtitle,
@@ -245,9 +202,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  createButton: {
-    marginBottom: 0,
-  },
   list: {
     flex: 1,
   },
@@ -256,80 +210,29 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: spacing.md,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.huge,
   },
-  habitCard: {
+  loadCard: {
     gap: spacing.sm,
   },
-  inactiveCard: {
-    opacity: 0.75,
-  },
-  habitHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  habitTitle: {
-    flex: 1,
-    fontSize: 18,
+  loadTitle: {
+    fontSize: 16,
     fontWeight: '800',
     color: colors.text,
   },
-  statusBadge: {
-    ...typography.caption,
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.pill,
-    fontWeight: '700',
-  },
-  paceBadge: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: '700',
-  },
-  prescription: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    lineHeight: 21,
-  },
-  weekStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  habitMeta: {
+  loadBody: {
     ...typography.body,
     color: colors.textSecondary,
   },
-  progressTrack: {
-    height: 8,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surfaceMuted,
-    overflow: 'hidden',
-    marginTop: spacing.xs,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radii.pill,
-  },
-  progressLabel: {
+  loadTip: {
     ...typography.caption,
-    color: colors.textMuted,
+    color: colors.primaryDark,
+    fontWeight: '700',
   },
-  logButton: {
-    marginTop: spacing.xs,
-  },
-  archivedNote: {
-    ...typography.caption,
+  sectionLabel: {
+    ...typography.eyebrow,
     color: colors.textMuted,
-    textAlign: 'center',
+    textTransform: 'uppercase',
     marginTop: spacing.sm,
   },
   centered: {
@@ -344,9 +247,13 @@ const styles = StyleSheet.create({
   },
   messageCard: {
     gap: spacing.md,
+    alignItems: 'flex-start',
+  },
+  emptyEmoji: {
+    fontSize: 34,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.text,
   },
@@ -357,8 +264,5 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.body,
     color: colors.danger,
-  },
-  pressed: {
-    opacity: 0.9,
   },
 });

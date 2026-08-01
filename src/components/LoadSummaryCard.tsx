@@ -11,8 +11,8 @@ type LoadSummaryCardProps = {
 
 export function LoadSummaryCard({ load }: LoadSummaryCardProps) {
   return (
-    <Card style={styles.card}>
-      <Text style={styles.title}>Weekly load</Text>
+    <Card style={styles.card} variant={load.isBuildingAtCapacity ? 'gold' : 'default'}>
+      <Text style={styles.title}>Training load</Text>
       <View style={styles.stats}>
         <View style={styles.stat}>
           <Text style={styles.value}>{load.buildingHabits.length}</Text>
@@ -33,8 +33,8 @@ export function LoadSummaryCard({ load }: LoadSummaryCardProps) {
       </View>
 
       <Text style={styles.help}>
-        Recommended: up to {MAX_RECOMMENDED_BUILDING_HABITS} building habits at a
-        time.
+        Soft max {MAX_RECOMMENDED_BUILDING_HABITS} building quests at a time —
+        pause when life gets heavy.
       </Text>
 
       {load.sequencingTip ? (

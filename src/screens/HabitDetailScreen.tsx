@@ -10,12 +10,13 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { CoachingCard } from '../components/CoachingCard';
 import { LevelPath } from '../components/LevelPath';
-import { LevelSummary } from '../components/LevelSummary';
+import { PathMeter } from '../components/PathMeter';
 import { ScheduleEditor } from '../components/ScheduleEditor';
 import { Screen } from '../components/Screen';
 import { WeeklyPlanCard } from '../components/WeeklyPlanCard';
@@ -70,7 +71,6 @@ function HistoryItem({
           : `${log.minutesDone} / ${log.prescribedMinutes} min`}
       </Text>
       {log.note ? <Text style={styles.historyNote}>{log.note}</Text> : null}
-      <Text style={styles.historyHint}>Long-press to delete</Text>
     </Pressable>
   );
 }
@@ -90,11 +90,6 @@ function ProgressionHistoryItem({ event }: { event: ProgressionEvent }) {
         {formatLevel(event.from)} → {formatLevel(event.to)}
       </Text>
       <Text style={styles.historyNote}>{event.message}</Text>
-      {event.reflection?.wentWell ? (
-        <Text style={styles.historyMeta}>
-          Went well: {event.reflection.wentWell}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -115,7 +110,6 @@ export function HabitDetailScreen() {
   } = useHabits();
 
   const habit = getHabit(route.params.habitId);
-
   const coaching = useMemo(
     () => (habit ? buildCoachingSnapshot(habit, logs) : null),
     [habit, logs],
@@ -125,11 +119,8 @@ export function HabitDetailScreen() {
     return (
       <Screen contentStyle={styles.missingContent}>
         <Card style={styles.section}>
-          <Text style={styles.title}>Habit not found</Text>
-          <Text style={styles.subtitle}>
-            This habit may have been deleted.
-          </Text>
-          <Button label="Back to home" onPress={() => navigation.navigate('Home')} />
+          <Text style={styles.title}>Quest not found</Text>
+          <Button label="Back to arc" onPress={() => navigation.navigate('Home')} />
         </Card>
       </Screen>
     );
@@ -146,8 +137,8 @@ export function HabitDetailScreen() {
 
   const onDelete = () => {
     Alert.alert(
-      'Delete habit?',
-      `Remove “${habit.title}” and its session history? This cannot be undone.`,
+      'Delete this quest?',
+      `Remove “${habit.title}” and its history? This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -164,29 +155,25 @@ export function HabitDetailScreen() {
     );
   };
 
-  const onDeleteLog = (log: SessionLog) => {
-    Alert.alert('Delete session log?', 'Remove this logged session?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          void deleteLog(log.id);
-        },
-      },
-    ]);
-  };
-
   return (
     <Screen scroll contentStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>Habit goal · {formatHabitStatus(status)}</Text>
-        <Text style={styles.title}>{habit.title}</Text>
-        <Text style={styles.subtitle}>
-          Log sessions, take the weekly ritual, and let coaching protect your
-          momentum.
+      <LinearGradient colors={[colors.surfaceInk, '#243B63']} style={styles.hero}>
+        <Text style={styles.heroEyebrow}>
+          {formatHabitStatus(status)} · {formatPace(habit.pace)} pace
         </Text>
-      </View>
+        <Text style={styles.heroTitle}>{habit.title}</Text>
+        <Text style={styles.heroIdentity}>{coaching.identityLine}</Text>
+        <PathMeter
+          start={habit.start}
+          current={habit.current}
+          target={habit.target}
+          progress={progress}
+          tone="dark"
+        />
+        <Text style={styles.heroMeta}>
+          {Math.round(progress * 100)}% along the arc · {coaching.headline}
+        </Text>
+      </LinearGradient>
 
       <CoachingCard coaching={coaching} />
 
@@ -200,27 +187,20 @@ export function HabitDetailScreen() {
       ) : null}
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Weekly review ritual</Text>
+        <Text style={styles.sectionTitle}>Weekly ritual</Text>
         <Text style={styles.reviewHelp}>
-          Reflect on what went well, choose keep/hold/adjust, then apply
-          progression.
+          Reflect first. Then the arc decides: level up, hold, or gently reset.
         </Text>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Strong weeks at level</Text>
+          <Text style={styles.detailLabel}>Strong weeks</Text>
           <Text style={styles.detailValue}>
             {habit.strongWeeksAtLevel}/{minStrongWeeks}
           </Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Tough weeks streak</Text>
-          <Text style={styles.detailValue}>{habit.consecutiveLowWeeks}/2</Text>
-        </View>
         <View style={styles.holdRow}>
           <View style={styles.holdCopy}>
             <Text style={styles.detailLabel}>Hold this level</Text>
-            <Text style={styles.holdHelp}>
-              Stay here even after strong weeks.
-            </Text>
+            <Text style={styles.holdHelp}>Stay here even after strong weeks.</Text>
           </View>
           <Switch
             value={habit.holdLevel}
@@ -236,7 +216,7 @@ export function HabitDetailScreen() {
               ? 'Resume to review'
               : alreadyEvaluated
                 ? 'Week already reviewed'
-                : 'Start weekly review'
+                : 'Enter weekly ritual'
           }
           onPress={() =>
             navigation.navigate('WeeklyReview', { habitId: habit.id })
@@ -254,19 +234,16 @@ export function HabitDetailScreen() {
       <Text style={styles.reminderSummary}>{describeHabitReminder(habit)}</Text>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Habit load controls</Text>
-        <Text style={styles.reviewHelp}>
-          Pause when life gets heavy. Archive to hide from your main list.
-        </Text>
+        <Text style={styles.sectionTitle}>Protect the load</Text>
         {status === 'paused' ? (
           <Button
-            label="Resume habit"
+            label="Resume quest"
             variant="secondary"
             onPress={() => void setHabitStatus(habit.id, 'building')}
           />
         ) : (
           <Button
-            label="Pause habit"
+            label="Pause quest"
             variant="secondary"
             onPress={() => void setHabitStatus(habit.id, 'paused')}
             disabled={status === 'archived'}
@@ -274,13 +251,13 @@ export function HabitDetailScreen() {
         )}
         {status === 'archived' ? (
           <Button
-            label="Unarchive habit"
+            label="Unarchive quest"
             variant="ghost"
             onPress={() => void setHabitStatus(habit.id, 'building')}
           />
         ) : (
           <Button
-            label="Archive habit"
+            label="Archive quest"
             variant="ghost"
             onPress={() => void setHabitStatus(habit.id, 'archived')}
           />
@@ -290,27 +267,11 @@ export function HabitDetailScreen() {
       <LevelPath habit={habit} />
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Your path snapshot</Text>
-        <LevelSummary label="Start" level={habit.start} />
-        <LevelSummary label="Current" level={habit.current} emphasis="primary" />
-        <LevelSummary label="Target" level={habit.target} emphasis="success" />
-
-        <View style={styles.progressBlock}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-          </View>
-          <Text style={styles.progressLabel}>
-            {Math.round(progress * 100)}% from start toward target
-          </Text>
-        </View>
-      </Card>
-
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Session history</Text>
+        <Text style={styles.sectionTitle}>Session chronicle</Text>
         {history.length === 0 ? (
           <Text style={styles.emptyHistory}>
-            No sessions logged yet. Complete, partially complete, or skip — just
-            keep the record going.
+            No reps logged yet. Every complete, partial, or skip still counts as
+            honesty.
           </Text>
         ) : (
           <View style={styles.historyList}>
@@ -318,7 +279,16 @@ export function HabitDetailScreen() {
               <HistoryItem
                 key={log.id}
                 log={log}
-                onDelete={() => onDeleteLog(log)}
+                onDelete={() =>
+                  Alert.alert('Delete session?', 'Remove this log?', [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: () => void deleteLog(log.id),
+                    },
+                  ])
+                }
               />
             ))}
           </View>
@@ -326,10 +296,10 @@ export function HabitDetailScreen() {
       </Card>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Progression history</Text>
+        <Text style={styles.sectionTitle}>Arc history</Text>
         {habit.progressionHistory.length === 0 ? (
           <Text style={styles.emptyHistory}>
-            No weekly reviews yet. After logging, start the weekly ritual.
+            No reviews yet. Finish a week, then enter the ritual.
           </Text>
         ) : (
           <View style={styles.historyList}>
@@ -340,26 +310,8 @@ export function HabitDetailScreen() {
         )}
       </Card>
 
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Plan details</Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Pace</Text>
-          <Text style={styles.detailValue}>{formatPace(habit.pace)}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Status</Text>
-          <Text style={styles.detailValue}>{formatHabitStatus(status)}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Created</Text>
-          <Text style={styles.detailValue}>
-            {new Date(habit.createdAt).toLocaleDateString()}
-          </Text>
-        </View>
-      </Card>
-
-      <Button label="Back to habits" variant="secondary" onPress={() => navigation.navigate('Home')} />
-      <Button label="Delete habit" variant="danger" onPress={onDelete} />
+      <Button label="Back to arc" variant="ink" onPress={() => navigation.navigate('Home')} />
+      <Button label="Delete quest" variant="danger" onPress={onDelete} />
     </Screen>
   );
 }
@@ -371,27 +323,34 @@ const styles = StyleSheet.create({
   missingContent: {
     justifyContent: 'center',
   },
-  header: {
-    gap: spacing.sm,
+  hero: {
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
   },
-  eyebrow: {
+  heroEyebrow: {
     ...typography.eyebrow,
     color: colors.primary,
     textTransform: 'uppercase',
   },
-  title: {
-    ...typography.heading,
-    color: colors.text,
+  heroTitle: {
+    ...typography.title,
+    color: colors.textOnInk,
   },
-  subtitle: {
-    ...typography.subtitle,
-    color: colors.textSecondary,
+  heroIdentity: {
+    ...typography.body,
+    color: colors.textOnInkMuted,
+    marginTop: -spacing.sm,
+  },
+  heroMeta: {
+    ...typography.caption,
+    color: colors.textOnInkMuted,
   },
   section: {
     gap: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.text,
   },
@@ -399,11 +358,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: -spacing.sm,
-  },
-  reminderSummary: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: -spacing.md,
   },
   holdRow: {
     flexDirection: 'row',
@@ -419,25 +373,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
   },
-  progressBlock: {
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  progressTrack: {
-    height: 10,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surfaceMuted,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: radii.pill,
-    backgroundColor: colors.primary,
-  },
-  progressLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -451,6 +386,11 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontWeight: '700',
     color: colors.text,
+  },
+  reminderSummary: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: -spacing.md,
   },
   emptyHistory: {
     ...typography.body,
@@ -499,10 +439,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: spacing.xs,
   },
-  historyHint: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
+  title: {
+    ...typography.heading,
+    color: colors.text,
   },
   pressed: {
     opacity: 0.85,

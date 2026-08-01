@@ -13,8 +13,8 @@ type CoachingCardProps = {
 
 export function CoachingCard({ coaching }: CoachingCardProps) {
   return (
-    <Card style={styles.card}>
-      <Text style={styles.eyebrow}>Coach</Text>
+    <Card variant="gold" style={styles.card}>
+      <Text style={styles.eyebrow}>Coach note</Text>
       <Text style={styles.headline}>{coaching.headline}</Text>
       <Text style={styles.support}>{coaching.supportLine}</Text>
       <Text style={styles.identity}>{coaching.identityLine}</Text>
@@ -30,7 +30,7 @@ export function CoachingCard({ coaching }: CoachingCardProps) {
           <Text style={styles.metricValue}>
             {Math.round(coaching.levelProgress * 100)}%
           </Text>
-          <Text style={styles.metricLabel}>Level path</Text>
+          <Text style={styles.metricLabel}>Arc path</Text>
         </View>
         <View style={styles.metric}>
           <Text style={styles.metricValue}>
@@ -54,11 +54,11 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   headline: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     color: colors.text,
   },
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   identity: {
     ...typography.body,
     color: colors.primaryDark,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   metrics: {
     flexDirection: 'row',
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: colors.surface,
     borderRadius: radii.sm,
     padding: spacing.sm,
     gap: 2,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   fallbackBox: {
-    backgroundColor: colors.warningSoft,
+    backgroundColor: colors.surface,
     borderRadius: radii.sm,
     padding: spacing.md,
     gap: 4,

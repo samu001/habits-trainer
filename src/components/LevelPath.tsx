@@ -15,9 +15,9 @@ export function LevelPath({ habit }: LevelPathProps) {
 
   return (
     <Card style={styles.card}>
-      <Text style={styles.title}>Progress path</Text>
+      <Text style={styles.title}>The climb</Text>
       <Text style={styles.help}>
-        One small step at a time — duration and frequency take turns climbing.
+        One dimension at a time. Duration and frequency take turns rising.
       </Text>
       <View style={styles.list}>
         {ladder.map((level, index) => {
@@ -37,27 +37,23 @@ export function LevelPath({ habit }: LevelPathProps) {
                 reached && !isCurrent && styles.rowReached,
               ]}
             >
-              <View
-                style={[
-                  styles.dot,
-                  isCurrent && styles.dotCurrent,
-                  reached && !isCurrent && styles.dotReached,
-                ]}
-              />
+              <Text style={styles.icon}>
+                {isCurrent ? '◉' : reached ? '●' : '○'}
+              </Text>
               <View style={styles.rowText}>
                 <Text style={[styles.levelText, isCurrent && styles.levelCurrent]}>
                   {formatLevel(level)}
                 </Text>
                 <Text style={styles.meta}>
                   {isCurrent
-                    ? 'Current level'
+                    ? 'You are here'
                     : isStart
-                      ? 'Start'
+                      ? 'Origin'
                       : isTarget
-                        ? 'Target'
+                        ? 'Summit'
                         : reached
-                          ? 'Passed'
-                          : 'Upcoming'}
+                          ? 'Cleared'
+                          : 'Ahead'}
                 </Text>
               </View>
             </View>
@@ -73,7 +69,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.text,
   },
@@ -100,17 +96,11 @@ const styles = StyleSheet.create({
   rowReached: {
     backgroundColor: colors.successSoft,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: radii.pill,
-    backgroundColor: colors.borderStrong,
-  },
-  dotCurrent: {
-    backgroundColor: colors.primary,
-  },
-  dotReached: {
-    backgroundColor: colors.success,
+  icon: {
+    width: 18,
+    textAlign: 'center',
+    color: colors.primaryDark,
+    fontWeight: '700',
   },
   rowText: {
     flex: 1,

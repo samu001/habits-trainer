@@ -6,10 +6,11 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, radii, spacing, typography } from '../theme/tokens';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'ink';
 
 type ButtonProps = {
   label: string;
@@ -31,6 +32,14 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const onDark = variant === 'primary' || variant === 'danger' || variant === 'ink';
+  const labelColor = onDark ? colors.textOnInk : colors.primaryDark;
+
+  const content = loading ? (
+    <ActivityIndicator color={labelColor} />
+  ) : (
+    <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+  );
 
   return (
     <Pressable
@@ -42,18 +51,23 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        styles[variant],
+        variant !== 'primary' && styles[variant],
         pressed && !isDisabled && styles.pressed,
         isDisabled && styles.disabled,
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'secondary' || variant === 'ghost' ? colors.primary : colors.surface}
-        />
+      {variant === 'primary' ? (
+        <LinearGradient
+          colors={[colors.primary, '#B8891A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientFill}
+        >
+          {content}
+        </LinearGradient>
       ) : (
-        <Text style={[styles.label, styles[`${variant}Label`]]}>{label}</Text>
+        content
       )}
     </Pressable>
   );
@@ -61,42 +75,50 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
+    minHeight: 52,
     borderRadius: radii.md,
-    paddingHorizontal: spacing.lg,
+    overflow: 'hidden',
+  },
+  gradientFill: {
+    flex: 1,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  primary: {
-    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
   },
   secondary: {
     backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: '#E2C76A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
   },
   danger: {
     backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
   },
   ghost: {
     backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  ink: {
+    backgroundColor: colors.surfaceInk,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
   },
   label: {
     ...typography.label,
     fontSize: 16,
   },
-  primaryLabel: {
-    color: colors.surface,
-  },
-  secondaryLabel: {
-    color: colors.primaryDark,
-  },
-  dangerLabel: {
-    color: colors.surface,
-  },
-  ghostLabel: {
-    color: colors.primaryDark,
-  },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
   disabled: {
     opacity: 0.5,

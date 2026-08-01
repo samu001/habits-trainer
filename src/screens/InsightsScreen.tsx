@@ -81,37 +81,38 @@ export function InsightsScreen() {
   return (
     <Screen scroll contentStyle={styles.content}>
       <Text style={styles.eyebrow} accessibilityRole="header">
-        Insights
+        Arc insights
       </Text>
-      <Text style={styles.title}>Your progress patterns</Text>
+      <Text style={styles.title}>Patterns across your quests</Text>
       <Text style={styles.subtitle}>
-        See what’s working, estimate time-to-target, and back up your data.
+        See what’s working, estimate time-to-target, and back up your training
+        arc.
       </Text>
 
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Overview</Text>
+      <Card style={styles.section} variant="ink">
+        <Text style={styles.inkSectionTitle}>Overview</Text>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Avg completion</Text>
-          <Text style={styles.statValue}>
+          <Text style={styles.inkStatLabel}>Avg completion</Text>
+          <Text style={styles.inkStatValue}>
             {Math.round(insights.overallAverageCompletion * 100)}%
           </Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Sessions logged</Text>
-          <Text style={styles.statValue}>{insights.totalSessionsLogged}</Text>
+          <Text style={styles.inkStatLabel}>Reps logged</Text>
+          <Text style={styles.inkStatValue}>{insights.totalSessionsLogged}</Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Most consistent</Text>
-          <Text style={styles.statValue}>
+          <Text style={styles.inkStatLabel}>Most consistent</Text>
+          <Text style={styles.inkStatValue}>
             {insights.mostConsistentHabit ?? '—'}
           </Text>
         </View>
       </Card>
 
       {insights.habits.length === 0 ? (
-        <Card style={styles.section}>
+        <Card style={styles.section} variant="gold">
           <Text style={styles.empty}>
-            Add and log habits to unlock insights.
+            Begin a quest and log a few reps to unlock arc insights.
           </Text>
         </Card>
       ) : (
@@ -133,7 +134,7 @@ export function InsightsScreen() {
               </Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Level path</Text>
+              <Text style={styles.statLabel}>Arc progress</Text>
               <Text style={styles.statValue}>
                 {Math.round(habit.levelProgress * 100)}%
               </Text>
@@ -146,8 +147,8 @@ export function InsightsScreen() {
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Backup & restore</Text>
         <Text style={styles.help}>
-          Export a local JSON backup. Cloud sync and Apple Health are future
-          options.
+          Export a local JSON backup of your training arc. Cloud sync and Apple
+          Health are future options.
         </Text>
         <Button label="Share backup" onPress={() => void onShare()} loading={busy} />
         <Button
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   title: {
@@ -203,6 +204,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
   },
+  inkSectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textOnInk,
+  },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -216,6 +222,17 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontWeight: '700',
     color: colors.text,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  inkStatLabel: {
+    ...typography.label,
+    color: colors.textOnInkMuted,
+  },
+  inkStatValue: {
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.textOnInk,
     flexShrink: 1,
     textAlign: 'right',
   },

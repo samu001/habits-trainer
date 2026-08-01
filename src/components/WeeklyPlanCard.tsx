@@ -23,26 +23,29 @@ export function WeeklyPlanCard({
   return (
     <Card style={[styles.card, compact && styles.compactCard]}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>This week</Text>
+        <Text style={styles.eyebrow}>This week’s mission</Text>
         <Text style={styles.weekLabel}>{progress.weekLabel}</Text>
       </View>
 
-      <Text style={styles.prescription}>{progress.prescriptionLabel}</Text>
+      <Text style={styles.prescription}>
+        {progress.requiredSessions}× for {progress.prescribedMinutes} minutes
+      </Text>
+      <Text style={styles.missionHelp}>{progress.prescriptionLabel}</Text>
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{creditLabel}</Text>
-          <Text style={styles.statLabel}>credits earned</Text>
+          <Text style={styles.statLabel}>credits</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{progress.remainingSessions}</Text>
-          <Text style={styles.statLabel}>sessions left</Text>
+          <Text style={styles.statLabel}>left</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>
             {Math.round(progress.completionRate * 100)}%
           </Text>
-          <Text style={styles.statLabel}>completion</Text>
+          <Text style={styles.statLabel}>done</Text>
         </View>
       </View>
 
@@ -57,17 +60,17 @@ export function WeeklyPlanCard({
 
       {progress.isComplete ? (
         <Text style={styles.completeText}>
-          Week complete — nice work staying with your current level.
+          Mission complete. Seal it with the weekly ritual.
         </Text>
       ) : (
         <Text style={styles.helpText}>
-          Aim for {progress.prescribedMinutes} minutes each session.
+          Aim for {progress.prescribedMinutes} honest minutes each rep.
         </Text>
       )}
 
       {onLogPress ? (
         <Button
-          label="Log session"
+          label="Log today’s rep"
           onPress={onLogPress}
           style={styles.logButton}
         />
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   weekLabel: {
@@ -100,10 +103,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   prescription: {
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.text,
-    lineHeight: 24,
+    letterSpacing: -0.3,
+  },
+  missionHelp: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: -spacing.sm,
   },
   statsRow: {
     flexDirection: 'row',
@@ -127,7 +135,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   progressTrack: {
-    height: 8,
+    height: 10,
     borderRadius: radii.pill,
     backgroundColor: colors.surfaceMuted,
     overflow: 'hidden',

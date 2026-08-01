@@ -1,21 +1,30 @@
 export const colors = {
-  background: '#F4F7FB',
-  surface: '#FFFFFF',
-  surfaceMuted: '#EEF2F8',
-  primary: '#5B6CFF',
-  primaryDark: '#4050E0',
-  primarySoft: '#E8EBFF',
-  text: '#121826',
-  textSecondary: '#5B6475',
-  textMuted: '#8B93A7',
-  border: '#D9E1F0',
-  borderStrong: '#C7D0E0',
-  success: '#1F9D6C',
-  successSoft: '#E6F7F0',
+  // Training Arc palette: midnight ink + warm gold + cream
+  background: '#F6F1E8',
+  backgroundDeep: '#14213D',
+  surface: '#FFFDF8',
+  surfaceMuted: '#EFE6D8',
+  surfaceInk: '#1B2A4A',
+  primary: '#C9A227',
+  primaryDark: '#9C7A12',
+  primarySoft: '#F3E4B0',
+  accent: '#2F6FED',
+  accentSoft: '#D9E6FF',
+  text: '#14213D',
+  textSecondary: '#5C6478',
+  textMuted: '#8A8478',
+  textOnInk: '#F8F1E3',
+  textOnInkMuted: '#C9C1B2',
+  border: '#E2D6C4',
+  borderStrong: '#CFC0A8',
+  success: '#2F8F6B',
+  successSoft: '#D9F3E8',
   warning: '#C47F17',
-  warningSoft: '#FFF4E5',
-  danger: '#D64545',
-  shadow: '#1B2437',
+  warningSoft: '#FFE8C2',
+  danger: '#C44536',
+  dangerSoft: '#F8D7D3',
+  shadow: '#0F172A',
+  glow: '#E8C547',
 };
 
 export const spacing = {
@@ -26,38 +35,41 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
+  huge: 40,
 };
 
 export const radii = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 24,
+  sm: 12,
+  md: 16,
+  lg: 22,
+  xl: 28,
   pill: 999,
 };
 
 export const typography = {
   eyebrow: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700' as const,
-    letterSpacing: 1,
+    letterSpacing: 1.4,
   },
   title: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '800' as const,
+    letterSpacing: -0.5,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800' as const,
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
     fontWeight: '400' as const,
   },
   body: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 23,
     fontWeight: '400' as const,
   },
   label: {
@@ -74,9 +86,16 @@ export const typography = {
 export const shadows = {
   card: {
     shadowColor: colors.shadow,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
+  glow: {
+    shadowColor: colors.glow,
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
 };

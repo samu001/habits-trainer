@@ -1,23 +1,24 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../context/HabitsContext';
-import { colors, spacing, typography } from '../theme/tokens';
+import { colors, radii, spacing, typography } from '../theme/tokens';
 
 const STEPS = [
   {
-    title: 'Start embarrassingly small',
-    body: 'Big goals are great. Tiny starts are what stick. Want 5×60 workouts? Begin at 2×15.',
+    title: 'Begin embarrassingly small',
+    body: 'Big goals are the destination. Tiny starts are the quest. Want 5×60 workouts? Begin at 2×15.',
   },
   {
-    title: 'Follow this week’s prescription',
-    body: 'Each week has one clear job at your current level. Log complete, partial, or skipped.',
+    title: 'Follow this week’s mission',
+    body: 'Each week has one clear prescription at your current level. Log complete, partial, or skipped — honesty beats heroics.',
   },
   {
-    title: 'Grow one step at a time',
-    body: 'Strong weeks level you up. Medium weeks hold. Tough weeks can gently downshift.',
+    title: 'Climb one rung at a time',
+    body: 'Strong weeks level you up. Medium weeks hold. Tough weeks can gently reset so the arc stays alive.',
   },
 ];
 
@@ -26,23 +27,31 @@ export function OnboardingScreen() {
 
   return (
     <Screen scroll contentStyle={styles.content}>
-      <Text style={styles.eyebrow}>Welcome</Text>
-      <Text style={styles.title}>Start small. Build up.</Text>
-      <Text style={styles.subtitle}>
-        Habits Trainer is a coach, not a guilt checklist. Consistency first,
-        intensity later.
-      </Text>
+      <LinearGradient
+        colors={[colors.surfaceInk, '#243B63']}
+        style={styles.hero}
+      >
+        <Text style={styles.heroEyebrow}>Training Arc</Text>
+        <Text style={styles.heroTitle}>Start small. Build up.</Text>
+        <Text style={styles.heroBody}>
+          This is a coach, not a guilt checklist. Protect the spark — intensity
+          comes later.
+        </Text>
+      </LinearGradient>
 
       {STEPS.map((step, index) => (
-        <Card key={step.title} style={styles.card}>
-          <Text style={styles.stepNumber}>Step {index + 1}</Text>
+        <Card key={step.title} style={styles.card} variant={index === 0 ? 'gold' : 'default'}>
+          <Text style={styles.stepNumber}>Chapter {index + 1}</Text>
           <Text style={styles.stepTitle}>{step.title}</Text>
           <Text style={styles.stepBody}>{step.body}</Text>
         </Card>
       ))}
 
       <View style={styles.footer}>
-        <Button label="Let’s build a habit" onPress={() => void completeOnboarding()} />
+        <Button
+          label="Begin my first quest"
+          onPress={() => void completeOnboarding()}
+        />
       </View>
     </Screen>
   );
@@ -52,19 +61,23 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
   },
-  eyebrow: {
+  hero: {
+    borderRadius: radii.xl,
+    padding: spacing.xxl,
+    gap: spacing.sm,
+  },
+  heroEyebrow: {
     ...typography.eyebrow,
     color: colors.primary,
     textTransform: 'uppercase',
   },
-  title: {
+  heroTitle: {
     ...typography.title,
-    color: colors.text,
+    color: colors.textOnInk,
   },
-  subtitle: {
-    ...typography.subtitle,
-    color: colors.textSecondary,
-    marginTop: -spacing.sm,
+  heroBody: {
+    ...typography.body,
+    color: colors.textOnInkMuted,
   },
   card: {
     gap: spacing.sm,
@@ -86,5 +99,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
 });

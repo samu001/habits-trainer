@@ -29,10 +29,10 @@ export function ScheduleEditor({ schedule, onChange }: ScheduleEditorProps) {
   return (
     <Card style={styles.card}>
       <Text style={styles.title} accessibilityRole="header">
-        Reminders & schedule
+        Mission schedule
       </Text>
       <Text style={styles.help}>
-        Nudges only — missed reminders never punish your streak or credits.
+        Gentle nudges only — missed reminders never punish your arc or credits.
       </Text>
 
       <View style={styles.row}>

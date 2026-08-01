@@ -25,12 +25,12 @@ const RESULT_OPTIONS: {
   {
     value: 'completed',
     label: 'Completed',
-    description: 'Did the full prescribed session.',
+    description: 'Full mission cleared — nice.',
   },
   {
     value: 'partial',
     label: 'Partial',
-    description: 'Did some of it — every bit still counts.',
+    description: 'Did some of it — honesty still advances the arc.',
   },
   {
     value: 'skipped',
@@ -75,7 +75,7 @@ export function LogSessionScreen() {
     return (
       <Screen contentStyle={styles.missingContent}>
         <Card style={styles.section}>
-          <Text style={styles.title}>Habit not found</Text>
+          <Text style={styles.title}>Quest not found</Text>
           <Button label="Go back" onPress={() => navigation.goBack()} />
         </Card>
       </Screen>
@@ -104,18 +104,18 @@ export function LogSessionScreen() {
   return (
     <Screen scroll contentStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Log session</Text>
+        <Text style={styles.eyebrow}>Log a rep</Text>
         <Text style={styles.title}>{habit.title}</Text>
         <Text style={styles.subtitle}>
-          This week’s prescription: {weekly.requiredSessions}× for{' '}
+          This week’s mission: {weekly.requiredSessions}× for{' '}
           {prescribedMinutes} minutes.
         </Text>
       </View>
 
-      <Card style={styles.fallbackCard}>
+      <Card style={styles.fallbackCard} variant="gold">
         <Text style={styles.fallbackLabel}>Hard-day fallback</Text>
         <Text style={styles.fallbackText}>
-          Can’t do {prescribedMinutes} min? Do {minViable} min to keep the chain
+          Can’t do {prescribedMinutes} min? Do {minViable} min to keep the arc
           alive — log it as partial.
         </Text>
         <Button
@@ -228,7 +228,7 @@ export function LogSessionScreen() {
         />
       </Card>
 
-      <Card style={styles.previewCard}>
+      <Card style={styles.previewCard} variant="gold">
         <Text style={styles.previewLabel}>Credit preview</Text>
         <Text style={styles.previewValue}>
           {creditPreview >= 1
@@ -244,7 +244,7 @@ export function LogSessionScreen() {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Button label="Save session" onPress={() => void onSave()} loading={saving} />
+      <Button label="Seal this rep" onPress={() => void onSave()} loading={saving} />
       <Button
         label="Cancel"
         variant="ghost"
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   title: {
@@ -334,7 +334,6 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     gap: spacing.xs,
-    backgroundColor: colors.primarySoft,
   },
   previewLabel: {
     ...typography.caption,
@@ -354,11 +353,10 @@ const styles = StyleSheet.create({
   },
   fallbackCard: {
     gap: spacing.sm,
-    backgroundColor: colors.warningSoft,
   },
   fallbackLabel: {
     ...typography.caption,
-    color: colors.warning,
+    color: colors.primaryDark,
     fontWeight: '700',
     textTransform: 'uppercase',
   },

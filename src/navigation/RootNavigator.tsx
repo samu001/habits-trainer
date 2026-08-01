@@ -40,27 +40,27 @@ export function RootNavigator() {
         <Stack.Screen
           name="CreateHabit"
           component={CreateHabitScreen}
-          options={{ title: 'New habit' }}
+          options={{ title: 'New quest' }}
         />
         <Stack.Screen
           name="HabitDetail"
           component={HabitDetailScreen}
-          options={{ title: 'Habit details' }}
+          options={{ title: 'Quest journey' }}
         />
         <Stack.Screen
           name="LogSession"
           component={LogSessionScreen}
-          options={{ title: 'Log session' }}
+          options={{ title: 'Log a rep' }}
         />
         <Stack.Screen
           name="WeeklyReview"
           component={WeeklyReviewScreen}
-          options={{ title: 'Weekly review' }}
+          options={{ title: 'Weekly ritual' }}
         />
         <Stack.Screen
           name="Insights"
           component={InsightsScreen}
-          options={{ title: 'Insights' }}
+          options={{ title: 'Arc insights' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

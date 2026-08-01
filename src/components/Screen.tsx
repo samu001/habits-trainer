@@ -6,6 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '../theme/tokens';
@@ -15,6 +16,7 @@ type ScreenProps = {
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
+  variant?: 'cream' | 'ink';
 };
 
 export function Screen({
@@ -22,32 +24,42 @@ export function Screen({
   scroll = false,
   style,
   contentStyle,
+  variant = 'cream',
 }: ScreenProps) {
-  if (scroll) {
-    return (
-      <SafeAreaView style={[styles.safeArea, style]} edges={['top', 'left', 'right']}>
-        <ScrollView
-          contentContainerStyle={[styles.scrollContent, contentStyle]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {children}
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
+  const gradientColors =
+    variant === 'ink'
+      ? ([colors.backgroundDeep, '#1E3358', '#243B63'] as const)
+      : ([colors.background, '#F3EBD9', '#EFE4D0'] as const);
+
+  const content = scroll ? (
+    <ScrollView
+      contentContainerStyle={[styles.scrollContent, contentStyle]}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      {children}
+    </ScrollView>
+  ) : (
+    <View style={[styles.content, contentStyle]}>{children}</View>
+  );
 
   return (
-    <SafeAreaView style={[styles.safeArea, style]} edges={['top', 'left', 'right']}>
-      <View style={[styles.content, contentStyle]}>{children}</View>
-    </SafeAreaView>
+    <View style={[styles.root, style]}>
+      <LinearGradient colors={[...gradientColors]} style={StyleSheet.absoluteFill} />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        {content}
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -57,6 +69,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.huge,
   },
 });

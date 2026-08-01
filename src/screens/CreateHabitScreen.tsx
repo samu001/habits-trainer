@@ -125,8 +125,8 @@ export function CreateHabitScreen() {
 
     if (atCapacity) {
       Alert.alert(
-        'That’s a lot of building habits',
-        `You already have ${load.buildingHabits.length} building habits. Most people succeed with ${MAX_RECOMMENDED_BUILDING_HABITS} or fewer. Add another anyway?`,
+        'That’s a lot of building quests',
+        `You already have ${load.buildingHabits.length} building quests. Most people succeed with ${MAX_RECOMMENDED_BUILDING_HABITS} or fewer. Add another anyway?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Add anyway', onPress: () => void save() },
@@ -140,10 +140,10 @@ export function CreateHabitScreen() {
 
   return (
     <Screen scroll contentStyle={styles.content}>
-      <Text style={styles.title}>Create a habit goal</Text>
+      <Text style={styles.eyebrow}>New quest</Text>
+      <Text style={styles.title}>Begin a training arc</Text>
       <Text style={styles.subtitle}>
-        Start from a template in under a minute, then tweak the target and
-        starting point.
+        Pick a template, set the dream target, then start smaller than you think.
       </Text>
 
       <Card style={styles.section}>
@@ -178,16 +178,16 @@ export function CreateHabitScreen() {
 
       {atCapacity ? (
         <Card style={styles.warningCard}>
-          <Text style={styles.warningTitle}>Load caution</Text>
+          <Text style={styles.warningTitle}>Capacity stretched</Text>
           <Text style={styles.warningBody}>
-            You already have {load.buildingHabits.length} building habits.
+            You already have {load.buildingHabits.length} building quests.
             Consider locking one in (or pausing one) before adding another.
           </Text>
         </Card>
       ) : null}
 
       <Card style={styles.section}>
-        <Text style={styles.label}>Habit name</Text>
+        <Text style={styles.label}>Quest name</Text>
         <TextInput
           value={title}
           onChangeText={(value) => {
@@ -203,7 +203,7 @@ export function CreateHabitScreen() {
       </Card>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Your target</Text>
+        <Text style={styles.sectionTitle}>Dream target</Text>
         <Text style={styles.sectionHelp}>
           The full habit you eventually want to keep.
         </Text>
@@ -227,10 +227,10 @@ export function CreateHabitScreen() {
       </Card>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Your starting point</Text>
+        <Text style={styles.sectionTitle}>Starting rung</Text>
         <Text style={styles.sectionHelp}>
           Start smaller than the target. Suggested values update as you change
-          the target — edit them anytime.
+          the dream — edit them anytime.
         </Text>
         <Stepper
           label="Starting frequency"
@@ -261,8 +261,8 @@ export function CreateHabitScreen() {
         <PaceSelector value={pace} onChange={setPace} />
       </Card>
 
-      <Card style={styles.previewCard}>
-        <Text style={styles.sectionTitle}>Plan preview</Text>
+      <Card style={styles.previewCard} variant="gold">
+        <Text style={styles.sectionTitle}>Arc preview</Text>
         <View style={styles.previewRow}>
           <Text style={styles.previewLabel}>Start</Text>
           <Text style={styles.previewValue}>{formatLevel(preview.start)}</Text>
@@ -272,14 +272,14 @@ export function CreateHabitScreen() {
           <Text style={styles.previewValue}>{formatLevel(preview.target)}</Text>
         </View>
         <Text style={styles.previewNote}>
-          Your current level begins here. Each week you’ll get a prescription
-          at this level and log sessions against it.
+          Your current level begins here. Each week you’ll get a mission at this
+          rung — log honestly, climb slowly.
         </Text>
       </Card>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Button label="Save habit goal" onPress={() => void onSave()} loading={saving} />
+      <Button label="Begin this quest" onPress={() => void onSave()} loading={saving} />
       <Button
         label="Cancel"
         variant="ghost"
@@ -293,6 +293,11 @@ export function CreateHabitScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
+  },
+  eyebrow: {
+    ...typography.eyebrow,
+    color: colors.primaryDark,
+    textTransform: 'uppercase',
   },
   title: {
     ...typography.heading,
@@ -364,7 +369,6 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     gap: spacing.sm,
-    backgroundColor: colors.primarySoft,
   },
   previewRow: {
     flexDirection: 'row',

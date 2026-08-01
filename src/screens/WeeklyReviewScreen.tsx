@@ -6,6 +6,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { CelebrationModal } from '../components/CelebrationModal';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../context/HabitsContext';
 import { buildCoachingSnapshot } from '../lib/coaching';
@@ -27,20 +28,27 @@ const INTENTIONS: {
 }[] = [
   {
     value: 'keep',
-    label: 'Keep going',
-    description: 'Trust the progression rules for this week.',
+    label: 'Keep climbing',
+    description: 'Trust the arc rules for this week.',
   },
   {
     value: 'hold',
-    label: 'Hold level',
-    description: 'Stay at the current level even if you earned a change.',
+    label: 'Hold this level',
+    description: 'Stay here even if you earned a change.',
   },
   {
     value: 'adjust',
-    label: 'Be ready to adjust',
-    description: 'Open to level-up or downshift based on the data.',
+    label: 'Stay open',
+    description: 'Level up or gently reset based on the data.',
   },
 ];
+
+type CelebrationState = {
+  title: string;
+  message: string;
+  emoji: string;
+  tone: 'gold' | 'calm' | 'warn';
+};
 
 export function WeeklyReviewScreen() {
   const navigation = useNavigation<ReviewNavigation>();
@@ -57,12 +65,13 @@ export function WeeklyReviewScreen() {
   const [wentWell, setWentWell] = useState('');
   const [intention, setIntention] = useState<ReflectionIntention>('keep');
   const [saving, setSaving] = useState(false);
+  const [celebration, setCelebration] = useState<CelebrationState | null>(null);
 
   if (!habit || !weekly || !coaching) {
     return (
       <Screen contentStyle={styles.missing}>
         <Card style={styles.section}>
-          <Text style={styles.title}>Habit not found</Text>
+          <Text style={styles.title}>Quest not found</Text>
           <Button label="Go back" onPress={() => navigation.goBack()} />
         </Card>
       </Screen>
@@ -79,21 +88,37 @@ export function WeeklyReviewScreen() {
         intention,
       });
 
-      const title =
-        result.decision.action === 'level_up'
-          ? 'Level up!'
-          : result.decision.action === 'downshift'
-            ? 'Downshift'
-            : result.decision.action === 'maintain'
-              ? 'Target maintained'
-              : 'Week reviewed';
+      const action = result.decision.action;
+      const next: CelebrationState =
+        action === 'level_up'
+          ? {
+              title: 'Level up!',
+              message: result.decision.message,
+              emoji: '⚡',
+              tone: 'gold',
+            }
+          : action === 'downshift'
+            ? {
+                title: 'Gentle reset',
+                message: result.decision.message,
+                emoji: '🛡️',
+                tone: 'warn',
+              }
+            : action === 'maintain'
+              ? {
+                  title: 'Level held',
+                  message: result.decision.message,
+                  emoji: '🛡️',
+                  tone: 'calm',
+                }
+              : {
+                  title: 'Week sealed',
+                  message: result.decision.message,
+                  emoji: '✦',
+                  tone: 'calm',
+                };
 
-      Alert.alert(title, result.decision.message, [
-        {
-          text: 'Done',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      setCelebration(next);
     } catch (err) {
       Alert.alert(
         'Could not review week',
@@ -109,17 +134,19 @@ export function WeeklyReviewScreen() {
       <Text style={styles.eyebrow}>Weekly ritual</Text>
       <Text style={styles.title}>{habit.title}</Text>
       <Text style={styles.subtitle}>
-        Reflect first, then let the coach apply this week’s progression decision.
+        Reflect first. Then the arc decides: climb, hold, or gently reset.
       </Text>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>This week</Text>
+        <Text style={styles.sectionTitle}>This week’s chapter</Text>
         <Text style={styles.body}>
           {Math.round(weekly.completionRate * 100)}% completion ·{' '}
           {weekly.earnedCredits.toFixed(weekly.earnedCredits % 1 === 0 ? 0 : 1)}/
           {weekly.requiredSessions} credits
         </Text>
-        <Text style={styles.caption}>{coaching.headline}. {coaching.supportLine}</Text>
+        <Text style={styles.caption}>
+          {coaching.headline}. {coaching.supportLine}
+        </Text>
       </Card>
 
       <Card style={styles.section}>
@@ -135,7 +162,7 @@ export function WeeklyReviewScreen() {
       </Card>
 
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>What should we do next?</Text>
+        <Text style={styles.sectionTitle}>What should the arc do next?</Text>
         <View style={styles.options}>
           {INTENTIONS.map((option) => {
             const selected = option.value === intention;
@@ -163,12 +190,24 @@ export function WeeklyReviewScreen() {
       </Card>
 
       <Button
-        label={alreadyEvaluated ? 'Week already reviewed' : 'Finish weekly review'}
+        label={alreadyEvaluated ? 'Week already sealed' : 'Seal the week'}
         onPress={() => void onSubmit()}
         loading={saving}
         disabled={alreadyEvaluated}
       />
       <Button label="Cancel" variant="ghost" onPress={() => navigation.goBack()} />
+
+      <CelebrationModal
+        visible={celebration !== null}
+        title={celebration?.title ?? ''}
+        message={celebration?.message ?? ''}
+        emoji={celebration?.emoji}
+        tone={celebration?.tone}
+        onClose={() => {
+          setCelebration(null);
+          navigation.goBack();
+        }}
+      />
     </Screen>
   );
 }
@@ -182,7 +221,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   title: {
@@ -231,6 +270,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
     gap: 4,
+    backgroundColor: colors.surface,
   },
   optionSelected: {
     borderColor: colors.primary,

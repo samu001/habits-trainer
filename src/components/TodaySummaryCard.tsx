@@ -11,12 +11,12 @@ export function TodaySummaryCard({ summary }: TodaySummaryCardProps) {
   return (
     <Card
       style={styles.card}
-      accessibilityLabel={`Today summary: ${summary}`}
+      accessibilityLabel={`Today’s chapter: ${summary}`}
     >
-      <Text style={styles.eyebrow}>Today</Text>
+      <Text style={styles.eyebrow}>Today’s chapter</Text>
       <Text style={styles.summary}>{summary}</Text>
       <Text style={styles.help}>
-        Compact summary format — ready for a future home-screen widget.
+        Compact summary — ready for a future home-screen widget.
       </Text>
     </Card>
   );
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.eyebrow,
-    color: colors.primary,
+    color: colors.primaryDark,
     textTransform: 'uppercase',
   },
   summary: {
