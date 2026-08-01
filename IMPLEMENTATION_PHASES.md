@@ -107,7 +107,7 @@ Completed — see `src/lib/prescription.ts`, `src/screens/LogSessionScreen.tsx`,
 
 ---
 
-## Phase 3 — Progression Engine (the differentiator)
+## Phase 3 — Progression Engine (the differentiator) ✅
 
 **Goal:** Automatically guide users upward (or hold/downshift) based on performance.
 
@@ -122,14 +122,14 @@ Completed — see `src/lib/prescription.ts`, `src/screens/LogSessionScreen.tsx`,
 - Progress path visualization (Start → Current → Target)
 
 ### Core logic (v1 rules)
-- Increase **one dimension at a time** (duration first, then frequency)
+- Increase **one dimension at a time** (balanced duration/frequency progress)
 - Level up if:
-  - completion rate ≥ 80% for current week (steady), and
-  - minimum weeks at level met (gentle: 2, steady: 1–2, ambitious: 1)
+  - completion rate ≥ 80% for current week, and
+  - minimum strong weeks at level met (gentle: 2, steady: 2, ambitious: 1)
 - Hold if completion rate is 50–79%
 - Downshift if completion rate < 50% for 2 consecutive weeks
 - Never exceed target
-- Optional: max duration increase of +5 to +10 minutes per step
+- Duration steps of +5 (under 20 min) or +10 minutes
 
 ### Example ladder
 Target `5×60`, start `2×15`:
@@ -148,8 +148,8 @@ Target `5×60`, start `2×15`:
 - Struggling weeks suggest hold/downshift
 - User can see the full path to their goal
 
-### Estimated effort
-5–7 days
+### Status
+Completed — see `src/lib/progression.ts`, LevelPath, weekly review on Habit Detail
 
 ---
 
@@ -276,7 +276,7 @@ Target `5×60`, start `2×15`:
 | 0 | Foundation | Runnable iPhone app shell | ✅ Done |
 | 1 | Goal creation | Target + start point saved | ✅ Done |
 | 2 | Prescription + logging | Weekly plan users can execute | ✅ Done |
-| 3 | Progression engine | Auto level-up / hold / downshift | Planned |
+| 3 | Progression engine | Auto level-up / hold / downshift | ✅ Done |
 | 4 | Coaching UX | Feels supportive and guided | Planned |
 | 5 | Multi-habit management | Prevents overload | Planned |
 | 6 | Reminders + polish | Daily reliability | Planned |
@@ -326,7 +326,7 @@ src/
 
 ## Next implementation step
 
-Begin **Phase 3**:
-1. Generate a level ladder from start → target
-2. Evaluate end-of-week completion for level-up / hold / downshift
-3. Show level-up celebration and optional hold override
+Begin **Phase 4**:
+1. Add coaching copy and weekly reflection prompts
+2. Show momentum / consistency metrics
+3. Offer a minimum-viable fallback for hard days

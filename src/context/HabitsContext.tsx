@@ -8,7 +8,12 @@ import {
   type ReactNode,
 } from 'react';
 
+import { getWeekId } from '../lib/dates';
 import { createHabitGoal, validateCreateHabitInput } from '../lib/habits';
+import {
+  applyWeekEvaluation,
+  type WeekEvaluationResult,
+} from '../lib/progression';
 import {
   buildWeeklyProgress,
   createSessionLog,
@@ -38,6 +43,11 @@ type HabitsContextValue = {
   getWeeklyProgress: (habitId: string, now?: Date) => WeeklyProgress | null;
   logSession: (input: LogSessionInput) => Promise<SessionLog>;
   deleteLog: (logId: string) => Promise<void>;
+  setHoldLevel: (habitId: string, holdLevel: boolean) => Promise<void>;
+  evaluateWeek: (
+    habitId: string,
+    weekId?: string,
+  ) => Promise<WeekEvaluationResult>;
   refresh: () => Promise<void>;
 };
 
@@ -153,6 +163,34 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
     [logs, persistLogs],
   );
 
+  const setHoldLevel = useCallback(
+    async (habitId: string, holdLevel: boolean) => {
+      const next = habits.map((habit) =>
+        habit.id === habitId ? { ...habit, holdLevel } : habit,
+      );
+      await persistHabits(next);
+    },
+    [habits, persistHabits],
+  );
+
+  const evaluateWeek = useCallback(
+    async (habitId: string, weekId?: string) => {
+      const habit = habits.find((item) => item.id === habitId);
+      if (!habit) {
+        throw new Error('Habit not found.');
+      }
+
+      const targetWeekId = weekId ?? getWeekId();
+      const result = applyWeekEvaluation(habit, logs, targetWeekId);
+      const next = habits.map((item) =>
+        item.id === habitId ? result.habit : item,
+      );
+      await persistHabits(next);
+      return result;
+    },
+    [habits, logs, persistHabits],
+  );
+
   const value = useMemo(
     () => ({
       habits,
@@ -166,6 +204,8 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       getWeeklyProgress,
       logSession,
       deleteLog,
+      setHoldLevel,
+      evaluateWeek,
       refresh,
     }),
     [
@@ -180,6 +220,8 @@ export function HabitsProvider({ children }: { children: ReactNode }) {
       getWeeklyProgress,
       logSession,
       deleteLog,
+      setHoldLevel,
+      evaluateWeek,
       refresh,
     ],
   );

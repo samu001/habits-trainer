@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { HabitGoal } from '../types/habit';
+import { normalizeHabitGoal } from './progression';
+import type { HabitGoal, HabitLevel } from '../types/habit';
 import type { SessionLog, SessionResult } from '../types/logging';
 
 const HABITS_KEY = 'habits-trainer/habits/v1';
 const LOGS_KEY = 'habits-trainer/logs/v1';
 
-function isHabitLevel(value: unknown): value is HabitGoal['target'] {
+function isHabitLevel(value: unknown): value is HabitLevel {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -71,7 +72,7 @@ export async function loadHabits(): Promise<HabitGoal[]> {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    return parsed.filter(isHabitGoal);
+    return parsed.filter(isHabitGoal).map(normalizeHabitGoal);
   } catch {
     return [];
   }

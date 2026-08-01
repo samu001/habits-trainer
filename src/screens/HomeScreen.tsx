@@ -13,7 +13,9 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../context/HabitsContext';
+import { getWeekId } from '../lib/dates';
 import { formatLevel, formatPace, progressTowardTarget } from '../lib/habits';
+import { minStrongWeeksForPace } from '../lib/progression';
 import type { RootStackParamList } from '../navigation/types';
 import type { HabitGoal } from '../types/habit';
 import type { WeeklyProgress } from '../types/logging';
@@ -33,6 +35,8 @@ function HabitListItem({
   onLogPress: () => void;
 }) {
   const progress = progressTowardTarget(habit);
+  const reviewed = habit.lastEvaluatedWeekId === getWeekId();
+  const minStrong = minStrongWeeksForPace(habit.pace);
 
   return (
     <Pressable
@@ -45,6 +49,8 @@ function HabitListItem({
           <Text style={styles.habitTitle}>{habit.title}</Text>
           <Text style={styles.paceBadge}>{formatPace(habit.pace)}</Text>
         </View>
+
+        <Text style={styles.habitMeta}>Current: {formatLevel(habit.current)}</Text>
 
         {weekly ? (
           <>
@@ -70,20 +76,18 @@ function HabitListItem({
             </View>
           </>
         ) : (
-          <>
-            <Text style={styles.habitMeta}>
-              Current: {formatLevel(habit.current)}
-            </Text>
-            <View style={styles.progressTrack}>
-              <View
-                style={[styles.progressFill, { width: `${progress * 100}%` }]}
-              />
-            </View>
-          </>
+          <View style={styles.progressTrack}>
+            <View
+              style={[styles.progressFill, { width: `${progress * 100}%` }]}
+            />
+          </View>
         )}
 
         <Text style={styles.progressLabel}>
-          Goal path: {Math.round(progress * 100)}% from start to target
+          Goal path: {Math.round(progress * 100)}% · Strong weeks{' '}
+          {habit.strongWeeksAtLevel}/{minStrong}
+          {habit.holdLevel ? ' · Holding' : ''}
+          {reviewed ? ' · Reviewed' : ''}
         </Text>
 
         <Button

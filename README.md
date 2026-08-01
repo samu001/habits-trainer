@@ -25,6 +25,12 @@ Example: want to work out **5× / week for 60 minutes**? Start at **2× / week f
 - Credit-based weekly completion rate
 - Session history per habit
 
+### Phase 3 — Progression engine
+- Auto-generated level ladder from start → target
+- Weekly review: level up / hold / downshift
+- Manual “hold this level” override
+- Progress path + progression history
+
 ## Requirements
 
 - Node.js 20+
@@ -72,4 +78,4 @@ src/
 
 See [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md).
 
-**Next up: Phase 3 — progression engine (level-up / hold / downshift).**
+**Next up: Phase 4 — coaching experience + motivation.**
