@@ -1,8 +1,18 @@
-# Habits Trainer
+# Training Arc (Habits Trainer)
 
 Progressive habit coaching app for iPhone, built with Expo + React Native (SDK 54).
 
 Set a big habit goal, choose a small starting point, and build up little by little.
+
+## Navigation
+
+Bottom tabs:
+
+- **Today** — coaching dashboard and missions still due this week
+- **Quests** — full habit portfolio
+- **Insights** — patterns + backup/restore
+
+Detail flows (log session, weekly ritual, create quest) open above the tabs.
 
 ## What’s implemented
 
